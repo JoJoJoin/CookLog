@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup JDK 17
         uses: actions/setup-java@v4
@@ -32,16 +34,25 @@ jobs:
       - name: Pub get
         run: flutter pub get
 
+      - name: Compute version
+        id: ver
+        run: |
+          # versionName 取 tag（去掉前缀 v），versionCode 用提交总数（单调递增、全自动）
+          VERSION_NAME="${GITHUB_REF_NAME#v}"
+          VERSION_CODE=$(git rev-list --count HEAD)
+          echo "name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
+          echo "code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
+          echo "版本：${VERSION_NAME} (${VERSION_CODE})"
+
       - name: Build release APK
-        run: flutter build apk --release
+        run: flutter build apk --release --build-name=${{ steps.ver.outputs.name }} --build-number=${{ steps.ver.outputs.code }}
 
       - name: Generate version.json
         id: meta
         run: |
           set -e
-          VERSION_LINE=$(grep -E '^version:' pubspec.yaml | head -n1 | sed 's/version:[[:space:]]*//')
-          VERSION_NAME=${VERSION_LINE%%+*}
-          VERSION_CODE=${VERSION_LINE##*+}
+          VERSION_NAME="${{ steps.ver.outputs.name }}"
+          VERSION_CODE="${{ steps.ver.outputs.code }}"
           APK_NAME="cooklog-${VERSION_NAME}.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "release/${APK_NAME}"
           SHA256=$(sha256sum "release/${APK_NAME}" | cut -d' ' -f1)
