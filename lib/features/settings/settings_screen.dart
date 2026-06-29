@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../update/update_controller.dart';
@@ -41,6 +42,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 error: (_, _) => '未知',
               ),
             ),
+          ),
+          const Divider(),
+          const _SectionHeader('数据'),
+          ListTile(
+            leading: const Icon(Icons.delete_outline),
+            title: const Text('回收站'),
+            subtitle: const Text('恢复或永久删除已删除的菜谱'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/recycle-bin'),
           ),
           const Divider(),
           const _SectionHeader('更新'),

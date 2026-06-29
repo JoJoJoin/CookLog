@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import 'db/database.dart';
 import 'repositories/cooking_log_repository.dart';
+import 'repositories/media_repository.dart';
 import 'repositories/recipe_repository.dart';
+import 'services/media_storage_service.dart';
 
 /// 全局数据库实例。
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -18,6 +20,16 @@ final recipeRepositoryProvider = Provider<RecipeRepository>((ref) {
 
 final cookingLogRepositoryProvider = Provider<CookingLogRepository>((ref) {
   return CookingLogRepository(ref.watch(databaseProvider));
+});
+
+final mediaStorageServiceProvider =
+    Provider<MediaStorageService>((ref) => MediaStorageService());
+
+final mediaRepositoryProvider = Provider<MediaRepository>((ref) {
+  return MediaRepository(
+    ref.watch(databaseProvider),
+    ref.watch(mediaStorageServiceProvider),
+  );
 });
 
 /// 想做清单流。
@@ -64,6 +76,17 @@ final recipeTagsProvider =
 final recipeLogsProvider =
     StreamProvider.autoDispose.family((ref, String id) {
   return ref.watch(cookingLogRepositoryProvider).watchForRecipe(id);
+});
+
+/// 某 owner 的图片流（ownerType:ownerId）。
+final mediaForOwnerProvider =
+    StreamProvider.autoDispose.family((ref, ({String type, String id}) k) {
+  return ref.watch(mediaRepositoryProvider).watchForOwner(k.type, k.id);
+});
+
+/// 回收站：已软删除的菜谱。
+final trashedRecipesProvider = StreamProvider.autoDispose((ref) {
+  return ref.watch(recipeRepositoryProvider).watchTrashed();
 });
 
 /// 全部做菜记录流。

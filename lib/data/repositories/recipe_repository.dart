@@ -198,4 +198,24 @@ class RecipeRepository {
       RecipesCompanion(deletedAt: Value(_now()), updatedAt: Value(_now())),
     );
   }
+
+  /// 回收站：已软删除的菜谱（最近删除优先）。
+  Stream<List<Recipe>> watchTrashed() {
+    return (_db.select(_db.recipes)
+          ..where((r) => r.deletedAt.isNotNull())
+          ..orderBy([(r) => OrderingTerm.desc(r.deletedAt)]))
+        .watch();
+  }
+
+  /// 从回收站恢复。
+  Future<void> restore(String id) {
+    return (_db.update(_db.recipes)..where((r) => r.id.equals(id))).write(
+      RecipesCompanion(deletedAt: const Value(null), updatedAt: Value(_now())),
+    );
+  }
+
+  /// 永久删除。
+  Future<void> purge(String id) {
+    return (_db.delete(_db.recipes)..where((r) => r.id.equals(id))).go();
+  }
 }

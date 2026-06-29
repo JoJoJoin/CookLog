@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../data/db/database.dart';
 import '../../data/models/enums.dart';
 import '../../data/providers.dart';
+import '../media/photo_viewer_screen.dart';
 
 /// 菜谱详情：基础信息 + 改良汇总 + 做菜时间线，并支持流转/标签/删除。
 class RecipeDetailScreen extends ConsumerWidget {
@@ -99,6 +102,8 @@ class _DetailBody extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(recipe.description!),
         ],
+        const SizedBox(height: 16),
+        _Gallery(ownerType: 'recipe', ownerId: recipe.id),
         tags.maybeWhen(
           data: (list) => list.isEmpty
               ? const SizedBox.shrink()
@@ -159,6 +164,50 @@ class _DetailBody extends ConsumerWidget {
       title: Text(date),
       subtitle: Text(log.notes?.isNotEmpty == true ? log.notes! : '无备注'),
       trailing: log.rating != null ? Text('★${log.rating}') : null,
+    );
+  }
+}
+
+class _Gallery extends ConsumerWidget {
+  const _Gallery({required this.ownerType, required this.ownerId});
+
+  final String ownerType;
+  final String ownerId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final media = ref.watch(
+        mediaForOwnerProvider((type: ownerType, id: ownerId)));
+    return media.maybeWhen(
+      data: (list) {
+        if (list.isEmpty) return const SizedBox.shrink();
+        final paths = list.map((m) => m.filePath).toList();
+        return SizedBox(
+          height: 88,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: list.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (_, i) => GestureDetector(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => PhotoViewerScreen(paths: paths, initial: i),
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.file(
+                  File(list[i].thumbPath ?? list[i].filePath),
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
     );
   }
 }

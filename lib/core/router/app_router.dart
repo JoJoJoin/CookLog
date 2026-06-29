@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/recipes/recipe_detail_screen.dart';
 import '../../features/recipes/recipes_screen.dart';
+import '../../features/recipes/recycle_bin_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/to_cook/to_cook_screen.dart';
 import '../widgets/scaffold_with_nav.dart';
@@ -55,6 +56,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/recipe/:id',
         builder: (context, state) =>
             RecipeDetailScreen(recipeId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/recycle-bin',
+        builder: (context, state) => const RecycleBinScreen(),
       ),
     ],
   );

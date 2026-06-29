@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../data/providers.dart';
 
@@ -23,6 +26,7 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
   int _rating = 0;
   DateTime _cookedAt = DateTime.now();
   bool _saving = false;
+  final List<XFile> _photos = [];
 
   bool get _isQuick => widget.recipeId == null;
 
@@ -44,21 +48,29 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
     if (picked != null) setState(() => _cookedAt = picked);
   }
 
+  Future<void> _addPhotos() async {
+    final storage = ref.read(mediaStorageServiceProvider);
+    final picked = await storage.pickFromGallery();
+    if (picked.isNotEmpty) setState(() => _photos.addAll(picked));
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
     final repo = ref.read(cookingLogRepositoryProvider);
+    final media = ref.read(mediaRepositoryProvider);
     final cookedAt = _cookedAt.millisecondsSinceEpoch;
     final notes = _notes.text.trim().isEmpty ? null : _notes.text.trim();
+    final String logId;
     if (_isQuick) {
-      await repo.createQuick(
+      logId = await repo.createQuick(
         title: _title.text.trim(),
         cookedAt: cookedAt,
         notes: notes,
         rating: _rating == 0 ? null : _rating,
       );
     } else {
-      await repo.create(
+      logId = await repo.create(
         recipeId: widget.recipeId,
         cookedAt: cookedAt,
         notes: notes,
@@ -67,6 +79,9 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
             : _improvements.text.trim(),
         rating: _rating == 0 ? null : _rating,
       );
+    }
+    if (_photos.isNotEmpty) {
+      await media.addImages('cooking_log', logId, _photos);
     }
     if (mounted) Navigator.of(context).pop();
   }
@@ -133,6 +148,12 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
                 maxLines: 2,
               ),
             ],
+            const SizedBox(height: 16),
+            _PhotoRow(
+              photos: _photos,
+              onAdd: _addPhotos,
+              onRemove: (i) => setState(() => _photos.removeAt(i)),
+            ),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: _saving ? null : _save,
@@ -140,6 +161,64 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _PhotoRow extends StatelessWidget {
+  const _PhotoRow(
+      {required this.photos, required this.onAdd, required this.onRemove});
+
+  final List<XFile> photos;
+  final VoidCallback onAdd;
+  final void Function(int) onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 88,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          for (var i = 0; i < photos.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(File(photos[i].path),
+                        width: 80, height: 80, fit: BoxFit.cover),
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: GestureDetector(
+                      onTap: () => onRemove(i),
+                      child: const CircleAvatar(
+                        radius: 11,
+                        backgroundColor: Colors.black54,
+                        child: Icon(Icons.close, size: 14, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          InkWell(
+            onTap: onAdd,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.add_a_photo_outlined),
+            ),
+          ),
+        ],
       ),
     );
   }
