@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/empty_placeholder.dart';
 import '../../data/db/database.dart';
@@ -67,6 +68,7 @@ class _ToCookTile extends ConsumerWidget {
         leading: const Icon(Icons.restaurant_menu),
         title: Text(recipe.title),
         subtitle: recipe.description == null ? null : Text(recipe.description!),
+        onTap: () => context.push('/recipe/${recipe.id}'),
         trailing: FilledButton.tonal(
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(

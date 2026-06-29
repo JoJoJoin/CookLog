@@ -8,6 +8,9 @@ const _uuid = Uuid();
 
 int _now() => DateTime.now().millisecondsSinceEpoch;
 
+/// 升「常做」的累计次数阈值。
+const kFrequentThreshold = 5;
+
 /// 做菜记录仓库：记录写入并维护菜谱派生数据（做过次数、状态、最近时间）。
 class CookingLogRepository {
   CookingLogRepository(this._db);
@@ -73,10 +76,12 @@ class CookingLogRepository {
     final last = (recipe.lastCookedAt == null || cookedAt > recipe.lastCookedAt!)
         ? cookedAt
         : recipe.lastCookedAt!;
-    // 首次做菜：想做 → 已做，下清单。
-    final nextStatus = recipe.status == RecipeStatus.wantToCook.value
-        ? RecipeStatus.cooked.value
-        : recipe.status;
+    // 状态流转：想做/已做 → 达阈值升「常做」，否则「已做」；搁置不自动改。
+    final nextStatus = recipe.status == RecipeStatus.shelved.value
+        ? recipe.status
+        : (newCount >= kFrequentThreshold
+            ? RecipeStatus.frequent.value
+            : RecipeStatus.cooked.value);
     await (_db.update(_db.recipes)..where((r) => r.id.equals(recipeId))).write(
       RecipesCompanion(
         cookCount: Value(newCount),

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/home/home_screen.dart';
+import '../../features/recipes/recipe_detail_screen.dart';
 import '../../features/recipes/recipes_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/to_cook/to_cook_screen.dart';
@@ -49,6 +50,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/recipe/:id',
+        builder: (context, state) =>
+            RecipeDetailScreen(recipeId: state.pathParameters['id']!),
       ),
     ],
   );
