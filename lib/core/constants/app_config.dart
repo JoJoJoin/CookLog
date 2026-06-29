@@ -16,6 +16,30 @@ class AppConfig {
   static const String versionJsonUrl =
       'https://github.com/JoJoJoin/CookLog/releases/latest/download/version.json';
 
+  /// GitHub 下载镜像前缀，用于国内网络访问 Releases（手机直连 github.com 常不通）。
+  ///
+  /// 留空字符串则直连 github.com。可按需替换为其它可用代理，例如：
+  /// `https://ghfast.top/`、`https://ghproxy.net/`、`https://mirror.ghproxy.com/`。
+  /// 这类公共代理稳定性会变化，若失效换一个即可；想彻底自主可改用 Gitee Releases 或对象存储。
+  static const String githubMirror = 'https://gh-proxy.com/';
+
+  /// 给 github.com / githubusercontent 链接套上 [githubMirror] 前缀。
+  ///
+  /// 非 GitHub 链接或镜像为空时原样返回。
+  static String mirrored(String url) {
+    if (githubMirror.isEmpty) return url;
+    const hosts = [
+      'https://github.com/',
+      'https://raw.githubusercontent.com/',
+      'https://release-assets.githubusercontent.com/',
+      'https://objects.githubusercontent.com/',
+    ];
+    for (final host in hosts) {
+      if (url.startsWith(host)) return '$githubMirror$url';
+    }
+    return url;
+  }
+
   /// 两次自动检查更新的最小间隔。
   static const Duration updateCheckInterval = Duration(hours: 24);
 

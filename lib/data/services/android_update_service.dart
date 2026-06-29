@@ -34,7 +34,7 @@ class AndroidUpdateService implements UpdateService {
   Future<UpdateInfo> fetchLatest() async {
     try {
       final response = await _dio.get<dynamic>(
-        AppConfig.versionJsonUrl,
+        AppConfig.mirrored(AppConfig.versionJsonUrl),
         options: Options(responseType: ResponseType.json),
       );
       final data = response.data;
@@ -80,7 +80,7 @@ class AndroidUpdateService implements UpdateService {
 
     try {
       await _dio.download(
-        info.apkUrl,
+        AppConfig.mirrored(info.apkUrl),
         savePath,
         onReceiveProgress: (received, total) {
           if (onProgress != null && total > 0) {
