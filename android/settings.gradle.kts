@@ -11,9 +11,19 @@ pluginManagement {
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
     repositories {
-        maven(url = "https://maven.aliyun.com/repository/google")
-        maven(url = "https://maven.aliyun.com/repository/public")
-        maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
+        // 本地在 local.properties 设 cn.mirror=true 可启用国内镜像加速；CI 默认走官方源。
+        val useCnMirror =
+            run {
+                val props = java.util.Properties()
+                val f = file("local.properties")
+                if (f.exists()) f.inputStream().use { props.load(it) }
+                props.getProperty("cn.mirror") == "true"
+            }
+        if (useCnMirror) {
+            maven(url = "https://maven.aliyun.com/repository/google")
+            maven(url = "https://maven.aliyun.com/repository/public")
+            maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
+        }
         google()
         mavenCentral()
         gradlePluginPortal()
