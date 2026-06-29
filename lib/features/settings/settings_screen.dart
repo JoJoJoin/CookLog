@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../update/update_controller.dart';
+import '../update/update_dialog.dart';
 
 /// 应用当前版本信息（versionName + versionCode）。
 final packageInfoProvider = FutureProvider<PackageInfo>((ref) {
@@ -88,8 +89,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       messenger.showSnackBar(
         SnackBar(content: Text(status.message)),
       );
+    } else if (status is UpdateAvailable) {
+      // 主动弹出更新对话框，不依赖根监听，保证手动检查总有反馈。
+      if (!updateDialogShowing) {
+        updateDialogShowing = true;
+        await showDialog<void>(
+          context: context,
+          barrierDismissible: !status.forced,
+          builder: (_) => UpdateDialog(forced: status.forced),
+        );
+        updateDialogShowing = false;
+      }
     }
-    // UpdateAvailable 由根部的 UpdateListener 弹出对话框。
   }
 }
 

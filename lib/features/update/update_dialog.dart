@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'update_controller.dart';
 
+/// 全局互斥：更新对话框是否已在前台，避免根监听与手动检查重复弹出。
+bool updateDialogShowing = false;
+
 /// 放在应用根部，监听自更新状态：发现新版本时弹出更新对话框。
 ///
 /// 「已是最新 / 出错」的即时反馈由触发方（设置页按钮）负责，避免自动检查打扰用户。
@@ -16,12 +19,10 @@ class UpdateListener extends ConsumerStatefulWidget {
 }
 
 class _UpdateListenerState extends ConsumerState<UpdateListener> {
-  bool _dialogOpen = false;
-
   @override
   Widget build(BuildContext context) {
     ref.listen<UpdateStatus>(updateControllerProvider, (prev, next) {
-      if (next is UpdateAvailable && !_dialogOpen) {
+      if (next is UpdateAvailable && !updateDialogShowing) {
         _openDialog(next.forced);
       }
     });
@@ -29,13 +30,13 @@ class _UpdateListenerState extends ConsumerState<UpdateListener> {
   }
 
   Future<void> _openDialog(bool forced) async {
-    _dialogOpen = true;
+    updateDialogShowing = true;
     await showDialog<void>(
       context: context,
       barrierDismissible: !forced,
       builder: (_) => UpdateDialog(forced: forced),
     );
-    _dialogOpen = false;
+    updateDialogShowing = false;
   }
 }
 
