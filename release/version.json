@@ -1,0 +1,11 @@
+{
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "minSupportedVersionCode": 1,
+  "apkUrl": "https://github.com/airsh/CookLog/releases/latest/download/cooklog-1.0.0.apk",
+  "fileSize": 0,
+  "sha256": "",
+  "forceUpdate": false,
+  "changelog": "- 首个版本：打通自更新通道",
+  "publishedAt": "2026-06-26T12:00:00Z"
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- open_filex 默认从应用缓存目录读取下载的 APK；
+         getTemporaryDirectory() 在 Android 对应 cacheDir。 -->
+    <cache-path name="cache" path="."/>
+    <external-cache-path name="external_cache" path="."/>
+    <files-path name="files" path="."/>
+</paths>
