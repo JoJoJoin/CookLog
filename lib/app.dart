@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_config.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'data/providers.dart';
 import 'features/update/update_controller.dart';
 import 'features/update/update_dialog.dart';
 
@@ -18,6 +19,8 @@ class _CookLogAppState extends ConsumerState<CookLogApp> {
   @override
   void initState() {
     super.initState();
+    // 首次启动写入预置标签。
+    ref.read(recipeRepositoryProvider).ensurePresetTags();
     // 启动后延迟自动检查更新，不阻塞首屏。
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(updateControllerProvider.notifier).checkForUpdate(manual: false);
