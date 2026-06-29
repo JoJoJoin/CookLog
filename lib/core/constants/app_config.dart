@@ -12,10 +12,9 @@ class AppConfig {
   /// 采用 GitHub Releases 的「latest」稳定地址：上传名为 `version.json` 与
   /// `cooklog-x.y.z.apk` 的 release asset 后，下面的地址会始终指向最新 release。
   ///
-  /// ⚠️ 发布前请把 `OWNER`/`REPO` 替换为你自己的仓库（当前占位：airsh/CookLog）。
   /// 也可换成 Gitee Releases 或对象存储的静态地址。
   static const String versionJsonUrl =
-      'https://github.com/airsh/CookLog/releases/latest/download/version.json';
+      'https://github.com/JoJoJoin/CookLog/releases/latest/download/version.json';
 
   /// 两次自动检查更新的最小间隔。
   static const Duration updateCheckInterval = Duration(hours: 24);
