@@ -63,6 +63,40 @@ class CoverThumb extends ConsumerWidget {
   }
 }
 
+/// 菜谱封面：用「最近一次做菜记录的照片」作图标，没做过则显示默认渐变 + emoji。
+class RecipeCoverThumb extends ConsumerWidget {
+  const RecipeCoverThumb({
+    super.key,
+    required this.recipeId,
+    this.size = 64,
+    this.radius = 16,
+    this.emoji = '🍲',
+  });
+
+  final String recipeId;
+  final double size;
+  final double radius;
+  final String emoji;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final path = ref.watch(recipeCoverProvider(recipeId)).maybeWhen(
+          data: (p) => p,
+          orElse: () => null,
+        );
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: path == null
+            ? _Fallback(id: recipeId, emoji: emoji, size: size)
+            : Image.file(File(path), fit: BoxFit.cover),
+      ),
+    );
+  }
+}
+
 class _Fallback extends StatelessWidget {
   const _Fallback({required this.id, required this.emoji, required this.size});
 

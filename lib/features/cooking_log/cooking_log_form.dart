@@ -5,14 +5,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
+import '../../data/db/database.dart';
 import '../../data/providers.dart';
+import '../media/photo_viewer_screen.dart';
 
 /// 记录一次做菜（F-02）。recipeId 非空表示给已有菜谱补记，空则随手记。
+///
+/// 传入 [log] 时进入编辑模式：可改日期/评分/心得/改良，并增删照片。
 class CookingLogFormScreen extends ConsumerStatefulWidget {
-  const CookingLogFormScreen({super.key, this.recipeId, this.recipeTitle});
+  const CookingLogFormScreen({
+    super.key,
+    this.recipeId,
+    this.recipeTitle,
+    this.log,
+  });
 
   final String? recipeId;
   final String? recipeTitle;
+  final CookingLog? log;
 
   @override
   ConsumerState<CookingLogFormScreen> createState() =>
@@ -28,8 +38,32 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
   DateTime _cookedAt = DateTime.now();
   bool _saving = false;
   final List<XFile> _photos = [];
+  List<MediaItem> _existing = [];
+  final List<MediaItem> _removed = [];
 
-  bool get _isQuick => widget.recipeId == null;
+  bool get _isQuick => widget.recipeId == null && widget.log == null;
+  bool get _isEdit => widget.log != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final log = widget.log;
+    if (log != null) {
+      _cookedAt = DateTime.fromMillisecondsSinceEpoch(log.cookedAt);
+      _rating = log.rating ?? 0;
+      _notes.text = log.notes ?? '';
+      _improvements.text = log.improvements ?? '';
+      _loadExistingPhotos(log.id);
+    }
+  }
+
+  Future<void> _loadExistingPhotos(String logId) async {
+    final list = await ref
+        .read(mediaRepositoryProvider)
+        .watchForOwner('cooking_log', logId)
+        .first;
+    if (mounted) setState(() => _existing = list);
+  }
 
   @override
   void dispose() {
@@ -55,6 +89,15 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
     if (picked.isNotEmpty) setState(() => _photos.addAll(picked));
   }
 
+  void _viewExisting(int index) {
+    final paths = _existing.map((m) => m.filePath).toList();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PhotoViewerScreen(paths: paths, initial: index),
+      ),
+    );
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
@@ -62,6 +105,26 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
     final media = ref.read(mediaRepositoryProvider);
     final cookedAt = _cookedAt.millisecondsSinceEpoch;
     final notes = _notes.text.trim().isEmpty ? null : _notes.text.trim();
+    final improvements =
+        _improvements.text.trim().isEmpty ? null : _improvements.text.trim();
+    if (_isEdit) {
+      final logId = widget.log!.id;
+      await repo.update(
+        id: logId,
+        cookedAt: cookedAt,
+        notes: notes,
+        improvements: improvements,
+        rating: _rating == 0 ? null : _rating,
+      );
+      for (final m in _removed) {
+        await media.delete(m);
+      }
+      if (_photos.isNotEmpty) {
+        await media.addImages('cooking_log', logId, _photos);
+      }
+      if (mounted) Navigator.of(context).pop();
+      return;
+    }
     final String logId;
     if (_isQuick) {
       logId = await repo.createQuick(
@@ -75,9 +138,7 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
         recipeId: widget.recipeId,
         cookedAt: cookedAt,
         notes: notes,
-        improvements: _improvements.text.trim().isEmpty
-            ? null
-            : _improvements.text.trim(),
+        improvements: improvements,
         rating: _rating == 0 ? null : _rating,
       );
     }
@@ -93,9 +154,11 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
     final dateText = DateFormat('yyyy-MM-dd').format(_cookedAt);
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.recipeTitle == null
-            ? '记一笔做菜'
-            : '做了 · ${widget.recipeTitle}'),
+        title: Text(_isEdit
+            ? '编辑做菜记录'
+            : widget.recipeTitle == null
+                ? '记一笔做菜'
+                : '做了 · ${widget.recipeTitle}'),
       ),
       body: Form(
         key: _formKey,
@@ -226,10 +289,17 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
                   children: [
                     Text('照片', style: Theme.of(context).textTheme.titleSmall),
                     const SizedBox(height: 10),
-                    _PhotoRow(
-                      photos: _photos,
+                    _EditablePhotoRow(
+                      existing: _existing,
+                      newPhotos: _photos,
                       onAdd: _addPhotos,
-                      onRemove: (i) => setState(() => _photos.removeAt(i)),
+                      onView: _viewExisting,
+                      onRemoveNew: (i) =>
+                          setState(() => _photos.removeAt(i)),
+                      onRemoveExisting: (i) => setState(() {
+                        _removed.add(_existing[i]);
+                        _existing = List.of(_existing)..removeAt(i);
+                      }),
                     ),
                   ],
                 ),
@@ -238,7 +308,11 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
             const SizedBox(height: 24),
             FilledButton(
               onPressed: _saving ? null : _save,
-              child: Text(_saving ? '保存中…' : '保存记录'),
+              child: Text(_saving
+                  ? '保存中…'
+                  : _isEdit
+                      ? '保存修改'
+                      : '保存记录'),
             ),
           ],
         ),
@@ -247,13 +321,22 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
   }
 }
 
-class _PhotoRow extends StatelessWidget {
-  const _PhotoRow(
-      {required this.photos, required this.onAdd, required this.onRemove});
+class _EditablePhotoRow extends StatelessWidget {
+  const _EditablePhotoRow({
+    required this.existing,
+    required this.newPhotos,
+    required this.onAdd,
+    required this.onView,
+    required this.onRemoveExisting,
+    required this.onRemoveNew,
+  });
 
-  final List<XFile> photos;
+  final List<MediaItem> existing;
+  final List<XFile> newPhotos;
   final VoidCallback onAdd;
-  final void Function(int) onRemove;
+  final void Function(int) onView;
+  final void Function(int) onRemoveExisting;
+  final void Function(int) onRemoveNew;
 
   @override
   Widget build(BuildContext context) {
@@ -263,30 +346,22 @@ class _PhotoRow extends StatelessWidget {
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
-          for (var i = 0; i < photos.length; i++)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.file(File(photos[i].path),
-                        width: 88, height: 88, fit: BoxFit.cover),
-                  ),
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: GestureDetector(
-                      onTap: () => onRemove(i),
-                      child: const CircleAvatar(
-                        radius: 11,
-                        backgroundColor: Colors.black54,
-                        child: Icon(Icons.close, size: 14, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
+          for (var i = 0; i < existing.length; i++)
+            _Thumb(
+              image: Image.file(
+                File(existing[i].thumbPath ?? existing[i].filePath),
+                width: 88,
+                height: 88,
+                fit: BoxFit.cover,
               ),
+              onTap: () => onView(i),
+              onRemove: () => onRemoveExisting(i),
+            ),
+          for (var i = 0; i < newPhotos.length; i++)
+            _Thumb(
+              image: Image.file(File(newPhotos[i].path),
+                  width: 88, height: 88, fit: BoxFit.cover),
+              onRemove: () => onRemoveNew(i),
             ),
           InkWell(
             onTap: onAdd,
@@ -299,6 +374,44 @@ class _PhotoRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.add_a_photo_outlined),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Thumb extends StatelessWidget {
+  const _Thumb({required this.image, required this.onRemove, this.onTap});
+
+  final Widget image;
+  final VoidCallback onRemove;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Stack(
+        children: [
+          GestureDetector(
+            onTap: onTap,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: image,
+            ),
+          ),
+          Positioned(
+            right: 0,
+            top: 0,
+            child: GestureDetector(
+              onTap: onRemove,
+              child: const CircleAvatar(
+                radius: 11,
+                backgroundColor: Colors.black54,
+                child: Icon(Icons.close, size: 14, color: Colors.white),
+              ),
             ),
           ),
         ],

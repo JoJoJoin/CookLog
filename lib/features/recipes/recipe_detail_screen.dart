@@ -11,6 +11,7 @@ import '../../data/models/enums.dart';
 import '../../data/models/formula.dart';
 import '../../data/providers.dart';
 import '../media/photo_viewer_screen.dart';
+import '../cooking_log/cooking_log_form.dart';
 import 'recipe_version_form.dart';
 
 /// 菜谱详情：基础信息 + 改良汇总 + 做菜时间线，并支持流转/标签/删除。
@@ -99,9 +100,8 @@ class _DetailBody extends ConsumerWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CoverThumb(
-                      ownerType: 'recipe',
-                      ownerId: recipe.id,
+                    RecipeCoverThumb(
+                      recipeId: recipe.id,
                       size: 92,
                       radius: 20,
                       emoji: '🍲',
@@ -179,12 +179,26 @@ class _DetailBody extends ConsumerWidget {
         const SizedBox(height: 12),
         _SectionCard(
           title: '做菜时间线',
+          trailing: FilledButton.tonalIcon(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => CookingLogFormScreen(
+                  recipeId: recipe.id,
+                  recipeTitle: recipe.title,
+                ),
+              ),
+            ),
+            icon: const Icon(Icons.restaurant_rounded, size: 18),
+            label: const Text('今天做了'),
+          ),
           child: logs.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Text('加载失败：$e'),
             data: (list) => list.isEmpty
                 ? const Text('还没有做菜记录')
-                : Column(children: list.map(_logTile).toList()),
+                : Column(
+                    children:
+                        list.map((l) => _logTile(context, l)).toList()),
           ),
         ),
       ],
@@ -208,7 +222,7 @@ class _DetailBody extends ConsumerWidget {
     );
   }
 
-  Widget _logTile(CookingLog log) {
+  Widget _logTile(BuildContext context, CookingLog log) {
     final date = DateFormat('yyyy-MM-dd')
         .format(DateTime.fromMillisecondsSinceEpoch(log.cookedAt));
     return Card(
@@ -224,6 +238,15 @@ class _DetailBody extends ConsumerWidget {
         title: Text(date),
         subtitle: Text(log.notes?.isNotEmpty == true ? log.notes! : '无备注'),
         trailing: log.rating != null ? RatingStars(log.rating!) : null,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => CookingLogFormScreen(
+              recipeId: recipe.id,
+              recipeTitle: recipe.title,
+              log: log,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -426,10 +449,11 @@ class _VersionsSection extends ConsumerWidget {
 }
 
 class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.title, required this.child});
+  const _SectionCard({required this.title, required this.child, this.trailing});
 
   final String title;
   final Widget child;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -439,7 +463,15 @@ class _SectionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(title,
+                      style: Theme.of(context).textTheme.titleMedium),
+                ),
+                ?trailing,
+              ],
+            ),
             const SizedBox(height: 10),
             child,
           ],

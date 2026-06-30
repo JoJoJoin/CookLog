@@ -91,9 +91,8 @@ class _ToCookCard extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CoverThumb(
-                  ownerType: 'recipe',
-                  ownerId: recipe.id,
+                RecipeCoverThumb(
+                  recipeId: recipe.id,
                   size: 78,
                   radius: 18,
                   emoji: '🥗',

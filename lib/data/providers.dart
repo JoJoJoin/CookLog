@@ -102,6 +102,12 @@ final mediaForOwnerProvider =
   return ref.watch(mediaRepositoryProvider).watchForOwner(k.type, k.id);
 });
 
+/// 菜谱封面图路径流：最近一次做菜记录的照片（无则 null）。
+final recipeCoverProvider =
+    StreamProvider.autoDispose.family((ref, String id) {
+  return ref.watch(mediaRepositoryProvider).watchRecipeCover(id);
+});
+
 /// 回收站：已软删除的菜谱。
 final trashedRecipesProvider = StreamProvider.autoDispose((ref) {
   return ref.watch(recipeRepositoryProvider).watchTrashed();

@@ -25,6 +25,30 @@ class MediaRepository {
         .watch();
   }
 
+  /// 监听某菜谱的封面图：取「最近一次有照片的做菜记录」的首张照片，
+  /// 没有任何做菜照片时返回 null（用默认图标兜底）。
+  Stream<String?> watchRecipeCover(String recipeId) {
+    final query = _db.select(_db.mediaItems).join([
+      innerJoin(
+        _db.cookingLogs,
+        _db.cookingLogs.id.equalsExp(_db.mediaItems.ownerId),
+      ),
+    ])
+      ..where(_db.mediaItems.ownerType.equals('cooking_log') &
+          _db.cookingLogs.recipeId.equals(recipeId) &
+          _db.cookingLogs.deletedAt.isNull())
+      ..orderBy([
+        OrderingTerm.desc(_db.cookingLogs.cookedAt),
+        OrderingTerm.asc(_db.mediaItems.sortOrder),
+      ])
+      ..limit(1);
+    return query.watch().map((rows) {
+      if (rows.isEmpty) return null;
+      final m = rows.first.readTable(_db.mediaItems);
+      return m.thumbPath ?? m.filePath;
+    });
+  }
+
   /// 选取多张图片，压缩落盘并写入媒体表，返回新增条数。
   Future<int> addImages(
       String ownerType, String ownerId, List<XFile> files) async {

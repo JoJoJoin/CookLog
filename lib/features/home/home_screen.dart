@@ -172,9 +172,8 @@ class _TodayPickCard extends ConsumerWidget {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    CoverThumb(
-                      ownerType: 'recipe',
-                      ownerId: pick.id,
+                    RecipeCoverThumb(
+                      recipeId: pick.id,
                       size: 56,
                       radius: 14,
                       emoji: '🎲',

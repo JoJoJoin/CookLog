@@ -127,9 +127,8 @@ class _RecipeCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CoverThumb(
-                ownerType: 'recipe',
-                ownerId: recipe.id,
+              RecipeCoverThumb(
+                recipeId: recipe.id,
                 size: 82,
                 radius: 18,
                 emoji: '🍲',

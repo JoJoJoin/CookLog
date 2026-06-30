@@ -67,6 +67,50 @@ class CookingLogRepository {
     return id;
   }
 
+  /// 修改一条已有做菜记录的内容（日期/评分/心得/改良），并刷新菜谱最近做菜时间。
+  Future<void> update({
+    required String id,
+    required int cookedAt,
+    String? notes,
+    String? improvements,
+    int? rating,
+  }) async {
+    await _db.transaction(() async {
+      final log = await (_db.select(_db.cookingLogs)
+            ..where((l) => l.id.equals(id)))
+          .getSingleOrNull();
+      if (log == null) return;
+      await (_db.update(_db.cookingLogs)..where((l) => l.id.equals(id))).write(
+        CookingLogsCompanion(
+          cookedAt: Value(cookedAt),
+          notes: Value(notes),
+          improvements: Value(improvements),
+          rating: Value(rating),
+          updatedAt: Value(_now()),
+        ),
+      );
+      if (log.recipeId != null) {
+        await _recomputeLastCooked(log.recipeId!);
+      }
+    });
+  }
+
+  /// 重新计算菜谱的最近做菜时间（取所有未删除记录的最大 cookedAt）。
+  Future<void> _recomputeLastCooked(String recipeId) async {
+    final logs = await (_db.select(_db.cookingLogs)
+          ..where((l) => l.deletedAt.isNull() & l.recipeId.equals(recipeId)))
+        .get();
+    final last = logs.isEmpty
+        ? null
+        : logs.map((l) => l.cookedAt).reduce((a, b) => a > b ? a : b);
+    await (_db.update(_db.recipes)..where((r) => r.id.equals(recipeId))).write(
+      RecipesCompanion(
+        lastCookedAt: Value(last),
+        updatedAt: Value(_now()),
+      ),
+    );
+  }
+
   Future<void> _refreshRecipeStats(String recipeId, int cookedAt) async {
     final recipe = await (_db.select(_db.recipes)
           ..where((r) => r.id.equals(recipeId)))
