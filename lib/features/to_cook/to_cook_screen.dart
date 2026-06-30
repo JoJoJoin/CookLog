@@ -104,7 +104,7 @@ class _ToCookCard extends ConsumerWidget {
                     children: [
                       Row(
                         children: [
-                          const StatusPill(RecipeStatus.wantToCook),
+                          StatusPill(RecipeStatus.wantToCook),
                           const Spacer(),
                           Text(
                             '想做',
