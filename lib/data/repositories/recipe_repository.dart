@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/constants/preset_tags.dart';
 import '../db/database.dart';
 import '../models/enums.dart';
+import '../models/formula.dart';
 
 const _uuid = Uuid();
 
@@ -169,9 +170,6 @@ class RecipeRepository {
   Future<String> createWantToCook({
     required String title,
     String? description,
-    SourceType sourceType = SourceType.none,
-    String? sourceUrl,
-    String? sourceAuthor,
   }) async {
     final id = _uuid.v4();
     final now = _now();
@@ -181,15 +179,92 @@ class RecipeRepository {
             title: title,
             status: Value(RecipeStatus.wantToCook.value),
             wantToCook: const Value(true),
-            sourceType: Value(sourceType.value),
-            sourceUrl: Value(sourceUrl),
-            sourceAuthor: Value(sourceAuthor),
             description: Value(description),
             createdAt: now,
             updatedAt: now,
           ),
         );
     return id;
+  }
+
+  /// 配方记录：按自评分从高到低（未评分排最后），同分按时间倒序。
+  Stream<List<RecipeVersion>> watchVersions(String recipeId) {
+    return (_db.select(_db.recipeVersions)
+          ..where((v) => v.recipeId.equals(recipeId))
+          ..orderBy([
+            (v) => OrderingTerm.desc(v.rating),
+            (v) => OrderingTerm.desc(v.createdAt),
+          ]))
+        .watch();
+  }
+
+  /// 新增一条配方记录，返回 id。
+  Future<String> addVersion(
+    String recipeId, {
+    required String name,
+    required List<FormulaIngredient> ingredients,
+    String? note,
+    int? rating,
+  }) async {
+    final id = _uuid.v4();
+    final now = _now();
+    await _db.into(_db.recipeVersions).insert(
+          RecipeVersionsCompanion.insert(
+            id: id,
+            recipeId: recipeId,
+            name: name,
+            ingredients: Value(encodeIngredients(ingredients)),
+            note: Value(note),
+            rating: Value(rating),
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    await _touchRecipe(recipeId);
+    return id;
+  }
+
+  /// 更新一条配方记录。
+  Future<void> updateVersion(
+    String id, {
+    required String recipeId,
+    required String name,
+    required List<FormulaIngredient> ingredients,
+    String? note,
+    int? rating,
+  }) async {
+    await (_db.update(_db.recipeVersions)..where((v) => v.id.equals(id))).write(
+      RecipeVersionsCompanion(
+        name: Value(name),
+        ingredients: Value(encodeIngredients(ingredients)),
+        note: Value(note),
+        rating: rating == null ? const Value(null) : Value(rating),
+        updatedAt: Value(_now()),
+      ),
+    );
+    await _touchRecipe(recipeId);
+  }
+
+  /// 仅更新某条配方记录的自评分。
+  Future<void> rateVersion(String id, String recipeId, int? rating) async {
+    await (_db.update(_db.recipeVersions)..where((v) => v.id.equals(id))).write(
+      RecipeVersionsCompanion(
+        rating: rating == null ? const Value(null) : Value(rating),
+        updatedAt: Value(_now()),
+      ),
+    );
+    await _touchRecipe(recipeId);
+  }
+
+  /// 删除一条配方记录。
+  Future<void> deleteVersion(String id, String recipeId) async {
+    await (_db.delete(_db.recipeVersions)..where((v) => v.id.equals(id))).go();
+    await _touchRecipe(recipeId);
+  }
+
+  Future<void> _touchRecipe(String recipeId) {
+    return (_db.update(_db.recipes)..where((r) => r.id.equals(recipeId)))
+        .write(RecipesCompanion(updatedAt: Value(_now())));
   }
 
   /// 软删除。

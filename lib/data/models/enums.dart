@@ -18,28 +18,6 @@ enum RecipeStatus {
   }
 }
 
-/// 菜谱来源类型。
-enum SourceType {
-  none('none', '无'),
-  link('link', '链接'),
-  video('video', '视频'),
-  image('image', '图片'),
-  book('book', '书籍'),
-  origin('origin', '原创');
-
-  const SourceType(this.value, this.label);
-
-  final String value;
-  final String label;
-
-  static SourceType fromValue(String value) {
-    return SourceType.values.firstWhere(
-      (e) => e.value == value,
-      orElse: () => SourceType.none,
-    );
-  }
-}
-
 /// 标签分类。
 enum TagCategory {
   cuisine('cuisine', '菜系'),

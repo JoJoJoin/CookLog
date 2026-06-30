@@ -90,6 +90,12 @@ final recipeLogsProvider =
   return ref.watch(cookingLogRepositoryProvider).watchForRecipe(id);
 });
 
+/// 菜谱配方记录流（按自评分排序，最高分在前）。
+final recipeVersionsProvider =
+    StreamProvider.autoDispose.family((ref, String id) {
+  return ref.watch(recipeRepositoryProvider).watchVersions(id);
+});
+
 /// 某 owner 的图片流（ownerType:ownerId）。
 final mediaForOwnerProvider =
     StreamProvider.autoDispose.family((ref, ({String type, String id}) k) {

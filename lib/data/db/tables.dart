@@ -7,9 +7,6 @@ class Recipes extends Table {
   IntColumn get status => integer().withDefault(const Constant(0))();
   BoolColumn get wantToCook =>
       boolean().withDefault(const Constant(false))();
-  TextColumn get sourceType => text().withDefault(const Constant('none'))();
-  TextColumn get sourceUrl => text().nullable()();
-  TextColumn get sourceAuthor => text().nullable()();
   TextColumn get steps => text().nullable()();
   TextColumn get description => text().nullable()();
   TextColumn get coverMediaId => text().nullable()();
@@ -71,6 +68,24 @@ class Ingredients extends Table {
   TextColumn get name => text()();
   TextColumn get amount => text().nullable()();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// 配方记录表：同一菜谱的多次配方修改，可自评打分。
+///
+/// [ingredients] 以 JSON 字符串保存配料数组，元素形如
+/// `{"name":"五花肉","amount":"300 克"}`。
+class RecipeVersions extends Table {
+  TextColumn get id => text()();
+  TextColumn get recipeId => text()();
+  TextColumn get name => text()();
+  TextColumn get ingredients => text().withDefault(const Constant('[]'))();
+  TextColumn get note => text().nullable()();
+  IntColumn get rating => integer().nullable()();
+  IntColumn get createdAt => integer()();
+  IntColumn get updatedAt => integer()();
 
   @override
   Set<Column> get primaryKey => {id};

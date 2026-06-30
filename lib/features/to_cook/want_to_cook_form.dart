@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/models/enums.dart';
 import '../../data/providers.dart';
 
 /// 新增「想做」菜谱表单（F-01）。
@@ -17,17 +16,12 @@ class _WantToCookFormScreenState extends ConsumerState<WantToCookFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _title = TextEditingController();
   final _description = TextEditingController();
-  final _sourceUrl = TextEditingController();
-  final _sourceAuthor = TextEditingController();
-  SourceType _sourceType = SourceType.none;
   bool _saving = false;
 
   @override
   void dispose() {
     _title.dispose();
     _description.dispose();
-    _sourceUrl.dispose();
-    _sourceAuthor.dispose();
     super.dispose();
   }
 
@@ -39,12 +33,6 @@ class _WantToCookFormScreenState extends ConsumerState<WantToCookFormScreen> {
           description: _description.text.trim().isEmpty
               ? null
               : _description.text.trim(),
-          sourceType: _sourceType,
-          sourceUrl:
-              _sourceUrl.text.trim().isEmpty ? null : _sourceUrl.text.trim(),
-          sourceAuthor: _sourceAuthor.text.trim().isEmpty
-              ? null
-              : _sourceAuthor.text.trim(),
         );
     if (mounted) Navigator.of(context).pop();
   }
@@ -118,36 +106,6 @@ class _WantToCookFormScreenState extends ConsumerState<WantToCookFormScreen> {
                       controller: _description,
                       decoration: const InputDecoration(labelText: '简介'),
                       maxLines: 2,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  children: [
-                    DropdownButtonFormField<SourceType>(
-                      initialValue: _sourceType,
-                      decoration: const InputDecoration(labelText: '来源'),
-                      items: SourceType.values
-                          .map((s) =>
-                              DropdownMenuItem(value: s, child: Text(s.label)))
-                          .toList(),
-                      onChanged: (v) =>
-                          setState(() => _sourceType = v ?? SourceType.none),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _sourceUrl,
-                      decoration: const InputDecoration(labelText: '来源链接'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _sourceAuthor,
-                      decoration: const InputDecoration(labelText: '来源作者/博主'),
                     ),
                   ],
                 ),

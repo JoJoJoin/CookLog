@@ -37,9 +37,13 @@ jobs:
       - name: Compute version
         id: ver
         run: |
-          # versionName 取 tag（去掉前缀 v），versionCode 用提交总数（单调递增、全自动）
+          # versionName 取 tag（去掉前缀 v）。
+          # versionCode 由版本号推导：major*10000 + minor*100 + patch，
+          # 与本地构建（pubspec 的 +code）保持一致、随 semver 单调递增，
+          # 避免「CI 用提交数 / 本地用 pubspec」两套来源导致的降级安装失败。
           VERSION_NAME="${GITHUB_REF_NAME#v}"
-          VERSION_CODE=$(git rev-list --count HEAD)
+          IFS='.' read -r MA MI PA <<< "${VERSION_NAME}"
+          VERSION_CODE=$((10#${MA} * 10000 + 10#${MI} * 100 + 10#${PA}))
           echo "name=${VERSION_NAME}" >> "$GITHUB_OUTPUT"
           echo "code=${VERSION_CODE}" >> "$GITHUB_OUTPUT"
           echo "版本：${VERSION_NAME} (${VERSION_CODE})"

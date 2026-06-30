@@ -8,8 +8,10 @@ import 'package:intl/intl.dart';
 import '../../core/widgets/ui_kit.dart';
 import '../../data/db/database.dart';
 import '../../data/models/enums.dart';
+import '../../data/models/formula.dart';
 import '../../data/providers.dart';
 import '../media/photo_viewer_screen.dart';
+import 'recipe_version_form.dart';
 
 /// 菜谱详情：基础信息 + 改良汇总 + 做菜时间线，并支持流转/标签/删除。
 class RecipeDetailScreen extends ConsumerWidget {
@@ -165,6 +167,8 @@ class _DetailBody extends ConsumerWidget {
           orElse: () => const SizedBox.shrink(),
         ),
         const SizedBox(height: 16),
+        _VersionsSection(recipeId: recipe.id),
+        const SizedBox(height: 12),
         _SectionCard(
           title: '改良汇总',
           child: logs.maybeWhen(
@@ -220,6 +224,202 @@ class _DetailBody extends ConsumerWidget {
         title: Text(date),
         subtitle: Text(log.notes?.isNotEmpty == true ? log.notes! : '无备注'),
         trailing: log.rating != null ? RatingStars(log.rating!) : null,
+      ),
+    );
+  }
+}
+
+/// 配方记录区：最高分配方排第一，可新增 / 修改 / 删除，每次保存留下记录。
+class _VersionsSection extends ConsumerWidget {
+  const _VersionsSection({required this.recipeId});
+
+  final String recipeId;
+
+  Future<void> _add(BuildContext context, int count) {
+    return Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RecipeVersionFormScreen(
+          recipeId: recipeId,
+          defaultName: '配方 ${count + 1}',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _edit(BuildContext context, RecipeVersion v) {
+    return Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RecipeVersionFormScreen(recipeId: recipeId, version: v),
+      ),
+    );
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref, RecipeVersion v) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('删除配方'),
+        content: Text('确定删除「${v.name}」这条配方记录吗？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await ref.read(recipeRepositoryProvider).deleteVersion(v.id, recipeId);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final versions = ref.watch(recipeVersionsProvider(recipeId));
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text('配方记录',
+                      style: Theme.of(context).textTheme.titleMedium),
+                ),
+                versions.maybeWhen(
+                  data: (list) => TextButton.icon(
+                    onPressed: () => _add(context, list.length),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('新建'),
+                  ),
+                  orElse: () => const SizedBox.shrink(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            versions.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Text('加载失败：$e'),
+              data: (list) {
+                if (list.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Text('还没有配方记录，点「新建」记录第一版配料用量。'),
+                  );
+                }
+                return Column(
+                  children: [
+                    for (var i = 0; i < list.length; i++)
+                      _versionTile(context, ref, list[i], i == 0),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _versionTile(
+      BuildContext context, WidgetRef ref, RecipeVersion v, bool top) {
+    final scheme = Theme.of(context).colorScheme;
+    final ingredients = decodeIngredients(v.ingredients);
+    final date = DateFormat('yyyy-MM-dd HH:mm')
+        .format(DateTime.fromMillisecondsSinceEpoch(v.updatedAt));
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: top
+            ? scheme.primaryContainer.withValues(alpha: 0.5)
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(16),
+        border: top
+            ? Border.all(color: scheme.primary.withValues(alpha: 0.4))
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (top)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Icon(Icons.workspace_premium,
+                      size: 18, color: scheme.primary),
+                ),
+              Expanded(
+                child: Text(
+                  v.name,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              if (v.rating != null) ...[
+                RatingStars(v.rating!, size: 14),
+                const SizedBox(width: 4),
+                Text('${v.rating}'),
+              ] else
+                Text('未评分',
+                    style: Theme.of(context).textTheme.labelSmall),
+              PopupMenuButton<String>(
+                onSelected: (action) {
+                  if (action == 'edit') {
+                    _edit(context, v);
+                  } else if (action == 'delete') {
+                    _delete(context, ref, v);
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'edit', child: Text('修改')),
+                  PopupMenuItem(value: 'delete', child: Text('删除')),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          if (ingredients.isEmpty)
+            const Text('（无配料）')
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: ingredients
+                  .map((ing) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 1),
+                        child: Row(
+                          children: [
+                            Expanded(child: Text('• ${ing.name}')),
+                            if ((ing.amount ?? '').isNotEmpty)
+                              Text(
+                                ing.amount!,
+                                style: TextStyle(
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ))
+                  .toList(),
+            ),
+          if ((v.note ?? '').trim().isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              v.note!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
+          const SizedBox(height: 6),
+          Text(date, style: Theme.of(context).textTheme.labelSmall),
+        ],
       ),
     );
   }

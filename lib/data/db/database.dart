@@ -13,6 +13,7 @@ part 'database.g.dart';
     Tags,
     RecipeTags,
     Ingredients,
+    RecipeVersions,
     MediaItems,
     AppMeta,
   ],
@@ -23,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -31,7 +32,9 @@ class AppDatabase extends _$AppDatabase {
           await m.createAll();
         },
         onUpgrade: (m, from, to) async {
-          // schemaVersion 提升时在此编写迁移；当前为 v1。
+          if (from < 2) {
+            await m.createTable(recipeVersions);
+          }
         },
       );
 

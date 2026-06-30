@@ -51,40 +51,6 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, Recipe> {
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _sourceTypeMeta = const VerificationMeta(
-    'sourceType',
-  );
-  @override
-  late final GeneratedColumn<String> sourceType = GeneratedColumn<String>(
-    'source_type',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant('none'),
-  );
-  static const VerificationMeta _sourceUrlMeta = const VerificationMeta(
-    'sourceUrl',
-  );
-  @override
-  late final GeneratedColumn<String> sourceUrl = GeneratedColumn<String>(
-    'source_url',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _sourceAuthorMeta = const VerificationMeta(
-    'sourceAuthor',
-  );
-  @override
-  late final GeneratedColumn<String> sourceAuthor = GeneratedColumn<String>(
-    'source_author',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
   static const VerificationMeta _stepsMeta = const VerificationMeta('steps');
   @override
   late final GeneratedColumn<String> steps = GeneratedColumn<String>(
@@ -187,9 +153,6 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, Recipe> {
     title,
     status,
     wantToCook,
-    sourceType,
-    sourceUrl,
-    sourceAuthor,
     steps,
     description,
     coverMediaId,
@@ -237,27 +200,6 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, Recipe> {
         wantToCook.isAcceptableOrUnknown(
           data['want_to_cook']!,
           _wantToCookMeta,
-        ),
-      );
-    }
-    if (data.containsKey('source_type')) {
-      context.handle(
-        _sourceTypeMeta,
-        sourceType.isAcceptableOrUnknown(data['source_type']!, _sourceTypeMeta),
-      );
-    }
-    if (data.containsKey('source_url')) {
-      context.handle(
-        _sourceUrlMeta,
-        sourceUrl.isAcceptableOrUnknown(data['source_url']!, _sourceUrlMeta),
-      );
-    }
-    if (data.containsKey('source_author')) {
-      context.handle(
-        _sourceAuthorMeta,
-        sourceAuthor.isAcceptableOrUnknown(
-          data['source_author']!,
-          _sourceAuthorMeta,
         ),
       );
     }
@@ -353,18 +295,6 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, Recipe> {
         DriftSqlType.bool,
         data['${effectivePrefix}want_to_cook'],
       )!,
-      sourceType: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}source_type'],
-      )!,
-      sourceUrl: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}source_url'],
-      ),
-      sourceAuthor: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}source_author'],
-      ),
       steps: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}steps'],
@@ -415,9 +345,6 @@ class Recipe extends DataClass implements Insertable<Recipe> {
   final String title;
   final int status;
   final bool wantToCook;
-  final String sourceType;
-  final String? sourceUrl;
-  final String? sourceAuthor;
   final String? steps;
   final String? description;
   final String? coverMediaId;
@@ -432,9 +359,6 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     required this.title,
     required this.status,
     required this.wantToCook,
-    required this.sourceType,
-    this.sourceUrl,
-    this.sourceAuthor,
     this.steps,
     this.description,
     this.coverMediaId,
@@ -452,13 +376,6 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     map['title'] = Variable<String>(title);
     map['status'] = Variable<int>(status);
     map['want_to_cook'] = Variable<bool>(wantToCook);
-    map['source_type'] = Variable<String>(sourceType);
-    if (!nullToAbsent || sourceUrl != null) {
-      map['source_url'] = Variable<String>(sourceUrl);
-    }
-    if (!nullToAbsent || sourceAuthor != null) {
-      map['source_author'] = Variable<String>(sourceAuthor);
-    }
     if (!nullToAbsent || steps != null) {
       map['steps'] = Variable<String>(steps);
     }
@@ -489,13 +406,6 @@ class Recipe extends DataClass implements Insertable<Recipe> {
       title: Value(title),
       status: Value(status),
       wantToCook: Value(wantToCook),
-      sourceType: Value(sourceType),
-      sourceUrl: sourceUrl == null && nullToAbsent
-          ? const Value.absent()
-          : Value(sourceUrl),
-      sourceAuthor: sourceAuthor == null && nullToAbsent
-          ? const Value.absent()
-          : Value(sourceAuthor),
       steps: steps == null && nullToAbsent
           ? const Value.absent()
           : Value(steps),
@@ -530,9 +440,6 @@ class Recipe extends DataClass implements Insertable<Recipe> {
       title: serializer.fromJson<String>(json['title']),
       status: serializer.fromJson<int>(json['status']),
       wantToCook: serializer.fromJson<bool>(json['wantToCook']),
-      sourceType: serializer.fromJson<String>(json['sourceType']),
-      sourceUrl: serializer.fromJson<String?>(json['sourceUrl']),
-      sourceAuthor: serializer.fromJson<String?>(json['sourceAuthor']),
       steps: serializer.fromJson<String?>(json['steps']),
       description: serializer.fromJson<String?>(json['description']),
       coverMediaId: serializer.fromJson<String?>(json['coverMediaId']),
@@ -552,9 +459,6 @@ class Recipe extends DataClass implements Insertable<Recipe> {
       'title': serializer.toJson<String>(title),
       'status': serializer.toJson<int>(status),
       'wantToCook': serializer.toJson<bool>(wantToCook),
-      'sourceType': serializer.toJson<String>(sourceType),
-      'sourceUrl': serializer.toJson<String?>(sourceUrl),
-      'sourceAuthor': serializer.toJson<String?>(sourceAuthor),
       'steps': serializer.toJson<String?>(steps),
       'description': serializer.toJson<String?>(description),
       'coverMediaId': serializer.toJson<String?>(coverMediaId),
@@ -572,9 +476,6 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     String? title,
     int? status,
     bool? wantToCook,
-    String? sourceType,
-    Value<String?> sourceUrl = const Value.absent(),
-    Value<String?> sourceAuthor = const Value.absent(),
     Value<String?> steps = const Value.absent(),
     Value<String?> description = const Value.absent(),
     Value<String?> coverMediaId = const Value.absent(),
@@ -589,9 +490,6 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     title: title ?? this.title,
     status: status ?? this.status,
     wantToCook: wantToCook ?? this.wantToCook,
-    sourceType: sourceType ?? this.sourceType,
-    sourceUrl: sourceUrl.present ? sourceUrl.value : this.sourceUrl,
-    sourceAuthor: sourceAuthor.present ? sourceAuthor.value : this.sourceAuthor,
     steps: steps.present ? steps.value : this.steps,
     description: description.present ? description.value : this.description,
     coverMediaId: coverMediaId.present ? coverMediaId.value : this.coverMediaId,
@@ -610,13 +508,6 @@ class Recipe extends DataClass implements Insertable<Recipe> {
       wantToCook: data.wantToCook.present
           ? data.wantToCook.value
           : this.wantToCook,
-      sourceType: data.sourceType.present
-          ? data.sourceType.value
-          : this.sourceType,
-      sourceUrl: data.sourceUrl.present ? data.sourceUrl.value : this.sourceUrl,
-      sourceAuthor: data.sourceAuthor.present
-          ? data.sourceAuthor.value
-          : this.sourceAuthor,
       steps: data.steps.present ? data.steps.value : this.steps,
       description: data.description.present
           ? data.description.value
@@ -642,9 +533,6 @@ class Recipe extends DataClass implements Insertable<Recipe> {
           ..write('title: $title, ')
           ..write('status: $status, ')
           ..write('wantToCook: $wantToCook, ')
-          ..write('sourceType: $sourceType, ')
-          ..write('sourceUrl: $sourceUrl, ')
-          ..write('sourceAuthor: $sourceAuthor, ')
           ..write('steps: $steps, ')
           ..write('description: $description, ')
           ..write('coverMediaId: $coverMediaId, ')
@@ -664,9 +552,6 @@ class Recipe extends DataClass implements Insertable<Recipe> {
     title,
     status,
     wantToCook,
-    sourceType,
-    sourceUrl,
-    sourceAuthor,
     steps,
     description,
     coverMediaId,
@@ -685,9 +570,6 @@ class Recipe extends DataClass implements Insertable<Recipe> {
           other.title == this.title &&
           other.status == this.status &&
           other.wantToCook == this.wantToCook &&
-          other.sourceType == this.sourceType &&
-          other.sourceUrl == this.sourceUrl &&
-          other.sourceAuthor == this.sourceAuthor &&
           other.steps == this.steps &&
           other.description == this.description &&
           other.coverMediaId == this.coverMediaId &&
@@ -704,9 +586,6 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
   final Value<String> title;
   final Value<int> status;
   final Value<bool> wantToCook;
-  final Value<String> sourceType;
-  final Value<String?> sourceUrl;
-  final Value<String?> sourceAuthor;
   final Value<String?> steps;
   final Value<String?> description;
   final Value<String?> coverMediaId;
@@ -722,9 +601,6 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     this.title = const Value.absent(),
     this.status = const Value.absent(),
     this.wantToCook = const Value.absent(),
-    this.sourceType = const Value.absent(),
-    this.sourceUrl = const Value.absent(),
-    this.sourceAuthor = const Value.absent(),
     this.steps = const Value.absent(),
     this.description = const Value.absent(),
     this.coverMediaId = const Value.absent(),
@@ -741,9 +617,6 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     required String title,
     this.status = const Value.absent(),
     this.wantToCook = const Value.absent(),
-    this.sourceType = const Value.absent(),
-    this.sourceUrl = const Value.absent(),
-    this.sourceAuthor = const Value.absent(),
     this.steps = const Value.absent(),
     this.description = const Value.absent(),
     this.coverMediaId = const Value.absent(),
@@ -763,9 +636,6 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     Expression<String>? title,
     Expression<int>? status,
     Expression<bool>? wantToCook,
-    Expression<String>? sourceType,
-    Expression<String>? sourceUrl,
-    Expression<String>? sourceAuthor,
     Expression<String>? steps,
     Expression<String>? description,
     Expression<String>? coverMediaId,
@@ -782,9 +652,6 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
       if (title != null) 'title': title,
       if (status != null) 'status': status,
       if (wantToCook != null) 'want_to_cook': wantToCook,
-      if (sourceType != null) 'source_type': sourceType,
-      if (sourceUrl != null) 'source_url': sourceUrl,
-      if (sourceAuthor != null) 'source_author': sourceAuthor,
       if (steps != null) 'steps': steps,
       if (description != null) 'description': description,
       if (coverMediaId != null) 'cover_media_id': coverMediaId,
@@ -803,9 +670,6 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     Value<String>? title,
     Value<int>? status,
     Value<bool>? wantToCook,
-    Value<String>? sourceType,
-    Value<String?>? sourceUrl,
-    Value<String?>? sourceAuthor,
     Value<String?>? steps,
     Value<String?>? description,
     Value<String?>? coverMediaId,
@@ -822,9 +686,6 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
       title: title ?? this.title,
       status: status ?? this.status,
       wantToCook: wantToCook ?? this.wantToCook,
-      sourceType: sourceType ?? this.sourceType,
-      sourceUrl: sourceUrl ?? this.sourceUrl,
-      sourceAuthor: sourceAuthor ?? this.sourceAuthor,
       steps: steps ?? this.steps,
       description: description ?? this.description,
       coverMediaId: coverMediaId ?? this.coverMediaId,
@@ -852,15 +713,6 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
     }
     if (wantToCook.present) {
       map['want_to_cook'] = Variable<bool>(wantToCook.value);
-    }
-    if (sourceType.present) {
-      map['source_type'] = Variable<String>(sourceType.value);
-    }
-    if (sourceUrl.present) {
-      map['source_url'] = Variable<String>(sourceUrl.value);
-    }
-    if (sourceAuthor.present) {
-      map['source_author'] = Variable<String>(sourceAuthor.value);
     }
     if (steps.present) {
       map['steps'] = Variable<String>(steps.value);
@@ -902,9 +754,6 @@ class RecipesCompanion extends UpdateCompanion<Recipe> {
           ..write('title: $title, ')
           ..write('status: $status, ')
           ..write('wantToCook: $wantToCook, ')
-          ..write('sourceType: $sourceType, ')
-          ..write('sourceUrl: $sourceUrl, ')
-          ..write('sourceAuthor: $sourceAuthor, ')
           ..write('steps: $steps, ')
           ..write('description: $description, ')
           ..write('coverMediaId: $coverMediaId, ')
@@ -2546,6 +2395,515 @@ class IngredientsCompanion extends UpdateCompanion<Ingredient> {
   }
 }
 
+class $RecipeVersionsTable extends RecipeVersions
+    with TableInfo<$RecipeVersionsTable, RecipeVersion> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecipeVersionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recipeIdMeta = const VerificationMeta(
+    'recipeId',
+  );
+  @override
+  late final GeneratedColumn<String> recipeId = GeneratedColumn<String>(
+    'recipe_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ingredientsMeta = const VerificationMeta(
+    'ingredients',
+  );
+  @override
+  late final GeneratedColumn<String> ingredients = GeneratedColumn<String>(
+    'ingredients',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ratingMeta = const VerificationMeta('rating');
+  @override
+  late final GeneratedColumn<int> rating = GeneratedColumn<int>(
+    'rating',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    recipeId,
+    name,
+    ingredients,
+    note,
+    rating,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recipe_versions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RecipeVersion> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('recipe_id')) {
+      context.handle(
+        _recipeIdMeta,
+        recipeId.isAcceptableOrUnknown(data['recipe_id']!, _recipeIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recipeIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('ingredients')) {
+      context.handle(
+        _ingredientsMeta,
+        ingredients.isAcceptableOrUnknown(
+          data['ingredients']!,
+          _ingredientsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('rating')) {
+      context.handle(
+        _ratingMeta,
+        rating.isAcceptableOrUnknown(data['rating']!, _ratingMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RecipeVersion map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecipeVersion(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      recipeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recipe_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      ingredients: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ingredients'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      rating: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rating'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RecipeVersionsTable createAlias(String alias) {
+    return $RecipeVersionsTable(attachedDatabase, alias);
+  }
+}
+
+class RecipeVersion extends DataClass implements Insertable<RecipeVersion> {
+  final String id;
+  final String recipeId;
+  final String name;
+  final String ingredients;
+  final String? note;
+  final int? rating;
+  final int createdAt;
+  final int updatedAt;
+  const RecipeVersion({
+    required this.id,
+    required this.recipeId,
+    required this.name,
+    required this.ingredients,
+    this.note,
+    this.rating,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['recipe_id'] = Variable<String>(recipeId);
+    map['name'] = Variable<String>(name);
+    map['ingredients'] = Variable<String>(ingredients);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    if (!nullToAbsent || rating != null) {
+      map['rating'] = Variable<int>(rating);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  RecipeVersionsCompanion toCompanion(bool nullToAbsent) {
+    return RecipeVersionsCompanion(
+      id: Value(id),
+      recipeId: Value(recipeId),
+      name: Value(name),
+      ingredients: Value(ingredients),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      rating: rating == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rating),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory RecipeVersion.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecipeVersion(
+      id: serializer.fromJson<String>(json['id']),
+      recipeId: serializer.fromJson<String>(json['recipeId']),
+      name: serializer.fromJson<String>(json['name']),
+      ingredients: serializer.fromJson<String>(json['ingredients']),
+      note: serializer.fromJson<String?>(json['note']),
+      rating: serializer.fromJson<int?>(json['rating']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'recipeId': serializer.toJson<String>(recipeId),
+      'name': serializer.toJson<String>(name),
+      'ingredients': serializer.toJson<String>(ingredients),
+      'note': serializer.toJson<String?>(note),
+      'rating': serializer.toJson<int?>(rating),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  RecipeVersion copyWith({
+    String? id,
+    String? recipeId,
+    String? name,
+    String? ingredients,
+    Value<String?> note = const Value.absent(),
+    Value<int?> rating = const Value.absent(),
+    int? createdAt,
+    int? updatedAt,
+  }) => RecipeVersion(
+    id: id ?? this.id,
+    recipeId: recipeId ?? this.recipeId,
+    name: name ?? this.name,
+    ingredients: ingredients ?? this.ingredients,
+    note: note.present ? note.value : this.note,
+    rating: rating.present ? rating.value : this.rating,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  RecipeVersion copyWithCompanion(RecipeVersionsCompanion data) {
+    return RecipeVersion(
+      id: data.id.present ? data.id.value : this.id,
+      recipeId: data.recipeId.present ? data.recipeId.value : this.recipeId,
+      name: data.name.present ? data.name.value : this.name,
+      ingredients: data.ingredients.present
+          ? data.ingredients.value
+          : this.ingredients,
+      note: data.note.present ? data.note.value : this.note,
+      rating: data.rating.present ? data.rating.value : this.rating,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecipeVersion(')
+          ..write('id: $id, ')
+          ..write('recipeId: $recipeId, ')
+          ..write('name: $name, ')
+          ..write('ingredients: $ingredients, ')
+          ..write('note: $note, ')
+          ..write('rating: $rating, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    recipeId,
+    name,
+    ingredients,
+    note,
+    rating,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecipeVersion &&
+          other.id == this.id &&
+          other.recipeId == this.recipeId &&
+          other.name == this.name &&
+          other.ingredients == this.ingredients &&
+          other.note == this.note &&
+          other.rating == this.rating &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class RecipeVersionsCompanion extends UpdateCompanion<RecipeVersion> {
+  final Value<String> id;
+  final Value<String> recipeId;
+  final Value<String> name;
+  final Value<String> ingredients;
+  final Value<String?> note;
+  final Value<int?> rating;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<int> rowid;
+  const RecipeVersionsCompanion({
+    this.id = const Value.absent(),
+    this.recipeId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.ingredients = const Value.absent(),
+    this.note = const Value.absent(),
+    this.rating = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RecipeVersionsCompanion.insert({
+    required String id,
+    required String recipeId,
+    required String name,
+    this.ingredients = const Value.absent(),
+    this.note = const Value.absent(),
+    this.rating = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       recipeId = Value(recipeId),
+       name = Value(name),
+       createdAt = Value(createdAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<RecipeVersion> custom({
+    Expression<String>? id,
+    Expression<String>? recipeId,
+    Expression<String>? name,
+    Expression<String>? ingredients,
+    Expression<String>? note,
+    Expression<int>? rating,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (recipeId != null) 'recipe_id': recipeId,
+      if (name != null) 'name': name,
+      if (ingredients != null) 'ingredients': ingredients,
+      if (note != null) 'note': note,
+      if (rating != null) 'rating': rating,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RecipeVersionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? recipeId,
+    Value<String>? name,
+    Value<String>? ingredients,
+    Value<String?>? note,
+    Value<int?>? rating,
+    Value<int>? createdAt,
+    Value<int>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return RecipeVersionsCompanion(
+      id: id ?? this.id,
+      recipeId: recipeId ?? this.recipeId,
+      name: name ?? this.name,
+      ingredients: ingredients ?? this.ingredients,
+      note: note ?? this.note,
+      rating: rating ?? this.rating,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (recipeId.present) {
+      map['recipe_id'] = Variable<String>(recipeId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (ingredients.present) {
+      map['ingredients'] = Variable<String>(ingredients.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (rating.present) {
+      map['rating'] = Variable<int>(rating.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecipeVersionsCompanion(')
+          ..write('id: $id, ')
+          ..write('recipeId: $recipeId, ')
+          ..write('name: $name, ')
+          ..write('ingredients: $ingredients, ')
+          ..write('note: $note, ')
+          ..write('rating: $rating, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $MediaItemsTable extends MediaItems
     with TableInfo<$MediaItemsTable, MediaItem> {
   @override
@@ -3327,6 +3685,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TagsTable tags = $TagsTable(this);
   late final $RecipeTagsTable recipeTags = $RecipeTagsTable(this);
   late final $IngredientsTable ingredients = $IngredientsTable(this);
+  late final $RecipeVersionsTable recipeVersions = $RecipeVersionsTable(this);
   late final $MediaItemsTable mediaItems = $MediaItemsTable(this);
   late final $AppMetaTable appMeta = $AppMetaTable(this);
   @override
@@ -3339,6 +3698,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     tags,
     recipeTags,
     ingredients,
+    recipeVersions,
     mediaItems,
     appMeta,
   ];
@@ -3350,9 +3710,6 @@ typedef $$RecipesTableCreateCompanionBuilder =
       required String title,
       Value<int> status,
       Value<bool> wantToCook,
-      Value<String> sourceType,
-      Value<String?> sourceUrl,
-      Value<String?> sourceAuthor,
       Value<String?> steps,
       Value<String?> description,
       Value<String?> coverMediaId,
@@ -3370,9 +3727,6 @@ typedef $$RecipesTableUpdateCompanionBuilder =
       Value<String> title,
       Value<int> status,
       Value<bool> wantToCook,
-      Value<String> sourceType,
-      Value<String?> sourceUrl,
-      Value<String?> sourceAuthor,
       Value<String?> steps,
       Value<String?> description,
       Value<String?> coverMediaId,
@@ -3411,21 +3765,6 @@ class $$RecipesTableFilterComposer
 
   ColumnFilters<bool> get wantToCook => $composableBuilder(
     column: $table.wantToCook,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get sourceType => $composableBuilder(
-    column: $table.sourceType,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get sourceUrl => $composableBuilder(
-    column: $table.sourceUrl,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get sourceAuthor => $composableBuilder(
-    column: $table.sourceAuthor,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3504,21 +3843,6 @@ class $$RecipesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get sourceType => $composableBuilder(
-    column: $table.sourceType,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get sourceUrl => $composableBuilder(
-    column: $table.sourceUrl,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get sourceAuthor => $composableBuilder(
-    column: $table.sourceAuthor,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<String> get steps => $composableBuilder(
     column: $table.steps,
     builder: (column) => ColumnOrderings(column),
@@ -3588,19 +3912,6 @@ class $$RecipesTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get sourceType => $composableBuilder(
-    column: $table.sourceType,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get sourceUrl =>
-      $composableBuilder(column: $table.sourceUrl, builder: (column) => column);
-
-  GeneratedColumn<String> get sourceAuthor => $composableBuilder(
-    column: $table.sourceAuthor,
-    builder: (column) => column,
-  );
-
   GeneratedColumn<String> get steps =>
       $composableBuilder(column: $table.steps, builder: (column) => column);
 
@@ -3667,9 +3978,6 @@ class $$RecipesTableTableManager
                 Value<String> title = const Value.absent(),
                 Value<int> status = const Value.absent(),
                 Value<bool> wantToCook = const Value.absent(),
-                Value<String> sourceType = const Value.absent(),
-                Value<String?> sourceUrl = const Value.absent(),
-                Value<String?> sourceAuthor = const Value.absent(),
                 Value<String?> steps = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String?> coverMediaId = const Value.absent(),
@@ -3685,9 +3993,6 @@ class $$RecipesTableTableManager
                 title: title,
                 status: status,
                 wantToCook: wantToCook,
-                sourceType: sourceType,
-                sourceUrl: sourceUrl,
-                sourceAuthor: sourceAuthor,
                 steps: steps,
                 description: description,
                 coverMediaId: coverMediaId,
@@ -3705,9 +4010,6 @@ class $$RecipesTableTableManager
                 required String title,
                 Value<int> status = const Value.absent(),
                 Value<bool> wantToCook = const Value.absent(),
-                Value<String> sourceType = const Value.absent(),
-                Value<String?> sourceUrl = const Value.absent(),
-                Value<String?> sourceAuthor = const Value.absent(),
                 Value<String?> steps = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String?> coverMediaId = const Value.absent(),
@@ -3723,9 +4025,6 @@ class $$RecipesTableTableManager
                 title: title,
                 status: status,
                 wantToCook: wantToCook,
-                sourceType: sourceType,
-                sourceUrl: sourceUrl,
-                sourceAuthor: sourceAuthor,
                 steps: steps,
                 description: description,
                 coverMediaId: coverMediaId,
@@ -4626,6 +4925,267 @@ typedef $$IngredientsTableProcessedTableManager =
       Ingredient,
       PrefetchHooks Function()
     >;
+typedef $$RecipeVersionsTableCreateCompanionBuilder =
+    RecipeVersionsCompanion Function({
+      required String id,
+      required String recipeId,
+      required String name,
+      Value<String> ingredients,
+      Value<String?> note,
+      Value<int?> rating,
+      required int createdAt,
+      required int updatedAt,
+      Value<int> rowid,
+    });
+typedef $$RecipeVersionsTableUpdateCompanionBuilder =
+    RecipeVersionsCompanion Function({
+      Value<String> id,
+      Value<String> recipeId,
+      Value<String> name,
+      Value<String> ingredients,
+      Value<String?> note,
+      Value<int?> rating,
+      Value<int> createdAt,
+      Value<int> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$RecipeVersionsTableFilterComposer
+    extends Composer<_$AppDatabase, $RecipeVersionsTable> {
+  $$RecipeVersionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recipeId => $composableBuilder(
+    column: $table.recipeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ingredients => $composableBuilder(
+    column: $table.ingredients,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rating => $composableBuilder(
+    column: $table.rating,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RecipeVersionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $RecipeVersionsTable> {
+  $$RecipeVersionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recipeId => $composableBuilder(
+    column: $table.recipeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ingredients => $composableBuilder(
+    column: $table.ingredients,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get rating => $composableBuilder(
+    column: $table.rating,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RecipeVersionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RecipeVersionsTable> {
+  $$RecipeVersionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get recipeId =>
+      $composableBuilder(column: $table.recipeId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get ingredients => $composableBuilder(
+    column: $table.ingredients,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<int> get rating =>
+      $composableBuilder(column: $table.rating, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$RecipeVersionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RecipeVersionsTable,
+          RecipeVersion,
+          $$RecipeVersionsTableFilterComposer,
+          $$RecipeVersionsTableOrderingComposer,
+          $$RecipeVersionsTableAnnotationComposer,
+          $$RecipeVersionsTableCreateCompanionBuilder,
+          $$RecipeVersionsTableUpdateCompanionBuilder,
+          (
+            RecipeVersion,
+            BaseReferences<_$AppDatabase, $RecipeVersionsTable, RecipeVersion>,
+          ),
+          RecipeVersion,
+          PrefetchHooks Function()
+        > {
+  $$RecipeVersionsTableTableManager(
+    _$AppDatabase db,
+    $RecipeVersionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecipeVersionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecipeVersionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RecipeVersionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> recipeId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> ingredients = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int?> rating = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RecipeVersionsCompanion(
+                id: id,
+                recipeId: recipeId,
+                name: name,
+                ingredients: ingredients,
+                note: note,
+                rating: rating,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String recipeId,
+                required String name,
+                Value<String> ingredients = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int?> rating = const Value.absent(),
+                required int createdAt,
+                required int updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => RecipeVersionsCompanion.insert(
+                id: id,
+                recipeId: recipeId,
+                name: name,
+                ingredients: ingredients,
+                note: note,
+                rating: rating,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RecipeVersionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RecipeVersionsTable,
+      RecipeVersion,
+      $$RecipeVersionsTableFilterComposer,
+      $$RecipeVersionsTableOrderingComposer,
+      $$RecipeVersionsTableAnnotationComposer,
+      $$RecipeVersionsTableCreateCompanionBuilder,
+      $$RecipeVersionsTableUpdateCompanionBuilder,
+      (
+        RecipeVersion,
+        BaseReferences<_$AppDatabase, $RecipeVersionsTable, RecipeVersion>,
+      ),
+      RecipeVersion,
+      PrefetchHooks Function()
+    >;
 typedef $$MediaItemsTableCreateCompanionBuilder =
     MediaItemsCompanion Function({
       required String id,
@@ -5045,6 +5605,8 @@ class $AppDatabaseManager {
       $$RecipeTagsTableTableManager(_db, _db.recipeTags);
   $$IngredientsTableTableManager get ingredients =>
       $$IngredientsTableTableManager(_db, _db.ingredients);
+  $$RecipeVersionsTableTableManager get recipeVersions =>
+      $$RecipeVersionsTableTableManager(_db, _db.recipeVersions);
   $$MediaItemsTableTableManager get mediaItems =>
       $$MediaItemsTableTableManager(_db, _db.mediaItems);
   $$AppMetaTableTableManager get appMeta =>
