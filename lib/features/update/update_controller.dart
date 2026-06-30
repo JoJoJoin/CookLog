@@ -1,21 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_config.dart';
+import '../../data/providers.dart';
 import '../../data/services/android_update_service.dart';
 import '../../data/services/preferences_service.dart';
 import '../../data/services/update_service.dart';
-
-/// SharedPreferences 实例（在 main 中预初始化后覆盖）。
-final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError('sharedPreferencesProvider 必须在 main 中被 override');
-});
-
-final preferencesServiceProvider = Provider<PreferencesService>((ref) {
-  return PreferencesService(ref.watch(sharedPreferencesProvider));
-});
 
 final updateServiceProvider = Provider<UpdateService>((ref) {
   return AndroidUpdateService();

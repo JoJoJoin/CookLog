@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 import '../../data/providers.dart';
 
@@ -88,8 +89,8 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dateText =
-        '${_cookedAt.year}-${_cookedAt.month.toString().padLeft(2, '0')}-${_cookedAt.day.toString().padLeft(2, '0')}';
+    final scheme = Theme.of(context).colorScheme;
+    final dateText = DateFormat('yyyy-MM-dd').format(_cookedAt);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.recipeTitle == null
@@ -99,60 +100,140 @@ class _CookingLogFormScreenState extends ConsumerState<CookingLogFormScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           children: [
-            if (_isQuick)
-              TextFormField(
-                controller: _title,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: '做了什么菜 *',
-                  hintText: '如：番茄炒蛋',
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+              decoration: BoxDecoration(
+                color: scheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: scheme.onSecondaryContainer.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text('🍳', style: TextStyle(fontSize: 24)),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '记录这次做菜',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                        ),
+                        SizedBox(height: 4),
+                        Text('你的心得会变成下次更稳的经验。'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  children: [
+                    if (_isQuick)
+                      TextFormField(
+                        controller: _title,
+                        autofocus: true,
+                        decoration: const InputDecoration(
+                          labelText: '做了什么菜 *',
+                          hintText: '如：番茄炒蛋',
+                        ),
+                        validator: (v) =>
+                            (v == null || v.trim().isEmpty) ? '请输入菜名' : null,
+                      ),
+                    if (_isQuick) const SizedBox(height: 12),
+                    Material(
+                      color: scheme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(16),
+                      child: ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        leading: const Icon(Icons.event_rounded),
+                        title: const Text('做菜日期'),
+                        subtitle: Text(dateText),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: _pickDate,
+                      ),
+                    ),
+                  ],
                 ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? '请输入菜名' : null,
               ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.event),
-              title: const Text('做菜日期'),
-              subtitle: Text(dateText),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: _pickDate,
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Text('评分'),
-                const SizedBox(width: 12),
-                ...List.generate(5, (i) {
-                  final n = i + 1;
-                  return IconButton(
-                    icon: Icon(n <= _rating ? Icons.star : Icons.star_border),
-                    onPressed: () => setState(() => _rating = n),
-                  );
-                }),
-              ],
-            ),
-            TextFormField(
-              controller: _notes,
-              decoration:
-                  const InputDecoration(labelText: '心得（咸淡、火候、用时）'),
-              maxLines: 3,
-            ),
-            if (!_isQuick) ...[
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _improvements,
-                decoration: const InputDecoration(labelText: '下次改良'),
-                maxLines: 2,
+            const SizedBox(height: 12),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('评分', style: Theme.of(context).textTheme.titleSmall),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 4,
+                      children: List.generate(5, (i) {
+                        final n = i + 1;
+                        return IconButton(
+                          iconSize: 28,
+                          visualDensity: VisualDensity.compact,
+                          icon: Icon(
+                            n <= _rating
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
+                          ),
+                          color: const Color(0xFFFFB300),
+                          onPressed: () => setState(() => _rating = n),
+                        );
+                      }),
+                    ),
+                    TextFormField(
+                      controller: _notes,
+                      decoration:
+                          const InputDecoration(labelText: '心得（咸淡、火候、用时）'),
+                      maxLines: 3,
+                    ),
+                    if (!_isQuick) ...[
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _improvements,
+                        decoration: const InputDecoration(labelText: '下次改良'),
+                        maxLines: 2,
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            ],
-            const SizedBox(height: 16),
-            _PhotoRow(
-              photos: _photos,
-              onAdd: _addPhotos,
-              onRemove: (i) => setState(() => _photos.removeAt(i)),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('照片', style: Theme.of(context).textTheme.titleSmall),
+                    const SizedBox(height: 10),
+                    _PhotoRow(
+                      photos: _photos,
+                      onAdd: _addPhotos,
+                      onRemove: (i) => setState(() => _photos.removeAt(i)),
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 24),
             FilledButton(
@@ -176,8 +257,9 @@ class _PhotoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return SizedBox(
-      height: 88,
+      height: 94,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
@@ -187,9 +269,9 @@ class _PhotoRow extends StatelessWidget {
               child: Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                     child: Image.file(File(photos[i].path),
-                        width: 80, height: 80, fit: BoxFit.cover),
+                        width: 88, height: 88, fit: BoxFit.cover),
                   ),
                   Positioned(
                     right: 0,
@@ -209,11 +291,12 @@ class _PhotoRow extends StatelessWidget {
           InkWell(
             onTap: onAdd,
             child: Container(
-              width: 80,
-              height: 80,
+              width: 88,
+              height: 88,
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
+                color: scheme.surfaceContainer,
+                border: Border.all(color: scheme.outlineVariant),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.add_a_photo_outlined),
             ),

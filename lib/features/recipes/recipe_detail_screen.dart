@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/widgets/ui_kit.dart';
 import '../../data/db/database.dart';
 import '../../data/models/enums.dart';
 import '../../data/providers.dart';
@@ -85,30 +86,75 @@ class _DetailBody extends ConsumerWidget {
     final tags = ref.watch(recipeTagsProvider(recipe.id));
     final logs = ref.watch(recipeLogsProvider(recipe.id));
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
       children: [
-        Text(recipe.title, style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          children: [
-            Chip(label: Text(status.label)),
-            Chip(label: Text('做过 ${recipe.cookCount} 次')),
-            if (recipe.rating != null) Chip(label: Text('评分 ${recipe.rating}')),
-          ],
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CoverThumb(
+                      ownerType: 'recipe',
+                      ownerId: recipe.id,
+                      size: 92,
+                      radius: 20,
+                      emoji: '🍲',
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(recipe.title,
+                              style: Theme.of(context).textTheme.headlineSmall),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              StatusPill(status),
+                              Chip(label: Text('做过 ${recipe.cookCount} 次')),
+                              if (recipe.rating != null)
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    RatingStars(recipe.rating!, size: 14),
+                                    const SizedBox(width: 4),
+                                    Text('${recipe.rating}'),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (recipe.description != null && recipe.description!.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    recipe.description!,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          height: 1.4,
+                        ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                _Gallery(ownerType: 'recipe', ownerId: recipe.id),
+              ],
+            ),
+          ),
         ),
-        if (recipe.description != null && recipe.description!.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Text(recipe.description!),
-        ],
-        const SizedBox(height: 16),
-        _Gallery(ownerType: 'recipe', ownerId: recipe.id),
         tags.maybeWhen(
           data: (list) => list.isEmpty
               ? const SizedBox.shrink()
               : Padding(
-                  padding: const EdgeInsets.only(top: 16),
+                  padding: const EdgeInsets.only(top: 12),
                   child: Wrap(
                     spacing: 8,
                     children: list
@@ -118,22 +164,24 @@ class _DetailBody extends ConsumerWidget {
                 ),
           orElse: () => const SizedBox.shrink(),
         ),
-        const Divider(height: 32),
-        Text('改良汇总', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        logs.maybeWhen(
-          data: _buildImprovements,
-          orElse: () => const SizedBox.shrink(),
+        const SizedBox(height: 16),
+        _SectionCard(
+          title: '改良汇总',
+          child: logs.maybeWhen(
+            data: _buildImprovements,
+            orElse: () => const SizedBox.shrink(),
+          ),
         ),
-        const Divider(height: 32),
-        Text('做菜时间线', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        logs.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Text('加载失败：$e'),
-          data: (list) => list.isEmpty
-              ? const Text('还没有做菜记录')
-              : Column(children: list.map(_logTile).toList()),
+        const SizedBox(height: 12),
+        _SectionCard(
+          title: '做菜时间线',
+          child: logs.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Text('加载失败：$e'),
+            data: (list) => list.isEmpty
+                ? const Text('还没有做菜记录')
+                : Column(children: list.map(_logTile).toList()),
+          ),
         ),
       ],
     );
@@ -148,8 +196,9 @@ class _DetailBody extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: items
           .map((l) => Padding(
-                padding: const EdgeInsets.only(bottom: 6),
-                child: Text('• ${l.improvements}'),
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text('• ${l.improvements}',
+                    style: const TextStyle(height: 1.35)),
               ))
           .toList(),
     );
@@ -158,12 +207,44 @@ class _DetailBody extends ConsumerWidget {
   Widget _logTile(CookingLog log) {
     final date = DateFormat('yyyy-MM-dd')
         .format(DateTime.fromMillisecondsSinceEpoch(log.cookedAt));
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: const Icon(Icons.event_note_outlined),
-      title: Text(date),
-      subtitle: Text(log.notes?.isNotEmpty == true ? log.notes! : '无备注'),
-      trailing: log.rating != null ? Text('★${log.rating}') : null,
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: CoverThumb(
+          ownerType: 'cooking_log',
+          ownerId: log.id,
+          size: 42,
+          radius: 10,
+          emoji: '🍳',
+        ),
+        title: Text(date),
+        subtitle: Text(log.notes?.isNotEmpty == true ? log.notes! : '无备注'),
+        trailing: log.rating != null ? RatingStars(log.rating!) : null,
+      ),
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 10),
+            child,
+          ],
+        ),
+      ),
     );
   }
 }
@@ -183,7 +264,7 @@ class _Gallery extends ConsumerWidget {
         if (list.isEmpty) return const SizedBox.shrink();
         final paths = list.map((m) => m.filePath).toList();
         return SizedBox(
-          height: 88,
+          height: 92,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: list.length,
@@ -195,11 +276,11 @@ class _Gallery extends ConsumerWidget {
                 ),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(14),
                 child: Image.file(
                   File(list[i].thumbPath ?? list[i].filePath),
-                  width: 80,
-                  height: 80,
+                  width: 88,
+                  height: 88,
                   fit: BoxFit.cover,
                 ),
               ),

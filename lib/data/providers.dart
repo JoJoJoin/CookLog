@@ -1,11 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'db/database.dart';
 import 'repositories/cooking_log_repository.dart';
 import 'repositories/media_repository.dart';
 import 'repositories/recipe_repository.dart';
 import 'services/media_storage_service.dart';
+import 'services/preferences_service.dart';
+
+/// SharedPreferences 实例（在 main 中预初始化后覆盖）。
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError('sharedPreferencesProvider 必须在 main 中被 override');
+});
+
+/// 偏好设置服务（更新开关、主题风格等）。
+final preferencesServiceProvider = Provider<PreferencesService>((ref) {
+  return PreferencesService(ref.watch(sharedPreferencesProvider));
+});
 
 /// 全局数据库实例。
 final databaseProvider = Provider<AppDatabase>((ref) {

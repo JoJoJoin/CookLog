@@ -51,49 +51,107 @@ class _WantToCookFormScreenState extends ConsumerState<WantToCookFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('想做一道菜')),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           children: [
-            TextFormField(
-              controller: _title,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: '菜名 *',
-                hintText: '如：番茄炒蛋',
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+              decoration: BoxDecoration(
+                color: scheme.tertiaryContainer,
+                borderRadius: BorderRadius.circular(22),
               ),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? '请输入菜名' : null,
+              child: Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: scheme.onTertiaryContainer.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text('📝', style: TextStyle(fontSize: 24)),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '先收藏，周末再做',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text('一条灵感先记下，做菜不再纠结。'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _title,
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        labelText: '菜名 *',
+                        hintText: '如：番茄炒蛋',
+                      ),
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? '请输入菜名' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _description,
+                      decoration: const InputDecoration(labelText: '简介'),
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _description,
-              decoration: const InputDecoration(labelText: '简介'),
-              maxLines: 2,
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<SourceType>(
-              initialValue: _sourceType,
-              decoration: const InputDecoration(labelText: '来源'),
-              items: SourceType.values
-                  .map((s) =>
-                      DropdownMenuItem(value: s, child: Text(s.label)))
-                  .toList(),
-              onChanged: (v) =>
-                  setState(() => _sourceType = v ?? SourceType.none),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _sourceUrl,
-              decoration: const InputDecoration(labelText: '来源链接'),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _sourceAuthor,
-              decoration: const InputDecoration(labelText: '来源作者/博主'),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  children: [
+                    DropdownButtonFormField<SourceType>(
+                      initialValue: _sourceType,
+                      decoration: const InputDecoration(labelText: '来源'),
+                      items: SourceType.values
+                          .map((s) =>
+                              DropdownMenuItem(value: s, child: Text(s.label)))
+                          .toList(),
+                      onChanged: (v) =>
+                          setState(() => _sourceType = v ?? SourceType.none),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _sourceUrl,
+                      decoration: const InputDecoration(labelText: '来源链接'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _sourceAuthor,
+                      decoration: const InputDecoration(labelText: '来源作者/博主'),
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 24),
             FilledButton(

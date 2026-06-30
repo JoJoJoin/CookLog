@@ -22,8 +22,17 @@ class EmptyPlaceholder extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 64, color: theme.colorScheme.primary),
-            const SizedBox(height: 16),
+            Container(
+              width: 92,
+              height: 92,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 40, color: theme.colorScheme.onPrimaryContainer),
+            ),
+            const SizedBox(height: 20),
             Text(title, style: theme.textTheme.titleLarge),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
@@ -31,7 +40,7 @@ class EmptyPlaceholder extends StatelessWidget {
                 subtitle!,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant, height: 1.5),
               ),
             ],
           ],

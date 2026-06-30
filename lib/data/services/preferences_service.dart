@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/theme/app_theme.dart';
+
 /// 轻量设置存储，封装自更新相关的本地偏好。
 class PreferencesService {
   PreferencesService(this._prefs);
@@ -8,6 +10,7 @@ class PreferencesService {
 
   static const _kUpdateCheckEnabled = 'update_check_enabled';
   static const _kLastUpdateCheckAt = 'last_update_check_at';
+  static const _kThemeStyle = 'theme_style';
 
   /// 是否启用自动检查更新（默认开启）。
   bool get updateCheckEnabled => _prefs.getBool(_kUpdateCheckEnabled) ?? true;
@@ -24,4 +27,11 @@ class PreferencesService {
 
   Future<void> setLastUpdateCheckAt(DateTime time) =>
       _prefs.setInt(_kLastUpdateCheckAt, time.millisecondsSinceEpoch);
+
+    /// 当前主题风格（默认番茄橙）。
+    AppThemeStyle get themeStyle =>
+      AppThemeStyle.fromKey(_prefs.getString(_kThemeStyle));
+
+    Future<void> setThemeStyle(AppThemeStyle style) =>
+      _prefs.setString(_kThemeStyle, style.key);
 }

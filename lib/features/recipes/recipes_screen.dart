@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/widgets/empty_placeholder.dart';
+import '../../core/widgets/brand_fx.dart';
+import '../../core/widgets/emoji_empty_state.dart';
+import '../../core/widgets/ui_kit.dart';
 import '../../data/db/database.dart';
 import '../../data/models/enums.dart';
 import '../../data/providers.dart';
@@ -17,84 +19,169 @@ class RecipesScreen extends ConsumerWidget {
     final tags = ref.watch(allTagsProvider);
     final activeTag = ref.watch(recipeTagFilterProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('菜谱')),
-      body: Column(
+      appBar: AppBar(title: const Text('菜谱库')),
+      body: BrandBackdrop(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 8),
+              child: TextField(
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.search_rounded),
+                  hintText: '搜索菜名或描述',
+                  isDense: true,
+                ),
+                onChanged: (v) =>
+                    ref.read(recipeKeywordProvider.notifier).state = v,
+              ),
+            ),
+            tags.maybeWhen(
+              data: (list) => _TagFilters(list: list, activeTag: activeTag),
+              orElse: () => const SizedBox.shrink(),
+            ),
+            Expanded(
+              child: recipes.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text('加载失败：$e')),
+                data: (list) {
+                  if (list.isEmpty) {
+                    return EmojiEmptyState(
+                      emoji: '📚',
+                      title: '还没有沉淀下来的菜谱',
+                      subtitle: '在「想做」加菜，或记录一次做菜后，\n就会自动出现在这里。',
+                      tone: Theme.of(context).colorScheme.secondaryContainer,
+                    );
+                  }
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 90),
+                    itemCount: list.length,
+                    itemBuilder: (context, i) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child:
+                          StaggerItem(index: i, child: _RecipeCard(recipe: list[i])),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TagFilters extends ConsumerWidget {
+  const _TagFilters({required this.list, required this.activeTag});
+
+  final List<Tag> list;
+  final String? activeTag;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SizedBox(
+      height: 46,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-            child: TextField(
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: '搜索菜名或描述',
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (v) =>
-                  ref.read(recipeKeywordProvider.notifier).state = v,
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              label: const Text('全部'),
+              selected: activeTag == null,
+              onSelected: (_) =>
+                  ref.read(recipeTagFilterProvider.notifier).state = null,
             ),
           ),
-          tags.maybeWhen(
-            data: (list) => SizedBox(
-              height: 44,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                children: [
-                  for (final t in list)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: Text(t.name),
-                        selected: activeTag == t.id,
-                        onSelected: (sel) => ref
-                            .read(recipeTagFilterProvider.notifier)
-                            .state = sel ? t.id : null,
-                      ),
-                    ),
-                ],
+          for (final t in list)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                label: Text(t.name),
+                selected: activeTag == t.id,
+                onSelected: (sel) => ref.read(recipeTagFilterProvider.notifier).state =
+                    sel ? t.id : null,
               ),
             ),
-            orElse: () => const SizedBox.shrink(),
-          ),
-          Expanded(
-            child: recipes.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('加载失败：$e')),
-              data: (list) {
-                if (list.isEmpty) {
-                  return const EmptyPlaceholder(
-                    icon: Icons.menu_book_outlined,
-                    title: '没有匹配的菜谱',
-                    subtitle: '在「想做」加菜或「记一笔」做菜后会沉淀到这里',
-                  );
-                }
-                return ListView.separated(
-                  itemCount: list.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, i) => _RecipeTile(recipe: list[i]),
-                );
-              },
-            ),
-          ),
         ],
       ),
     );
   }
 }
 
-class _RecipeTile extends StatelessWidget {
-  const _RecipeTile({required this.recipe});
+class _RecipeCard extends StatelessWidget {
+  const _RecipeCard({required this.recipe});
 
   final Recipe recipe;
 
   @override
   Widget build(BuildContext context) {
     final status = RecipeStatus.fromValue(recipe.status);
-    return ListTile(
-      leading: const Icon(Icons.restaurant_menu),
-      title: Text(recipe.title),
-      subtitle: Text('${status.label} · 做过 ${recipe.cookCount} 次'),
-      onTap: () => context.push('/recipe/${recipe.id}'),
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: () => context.push('/recipe/${recipe.id}'),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CoverThumb(
+                ownerType: 'recipe',
+                ownerId: recipe.id,
+                size: 82,
+                radius: 18,
+                emoji: '🍲',
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        StatusPill(status),
+                        const Spacer(),
+                        if (recipe.rating != null)
+                          RatingStars(recipe.rating!, size: 14),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      recipe.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '做过 ${recipe.cookCount} 次',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                    if (recipe.description != null &&
+                        recipe.description!.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        recipe.description!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color:
+                                  Theme.of(context).colorScheme.onSurfaceVariant,
+                              height: 1.35,
+                            ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_config.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_style_controller.dart';
 import 'data/providers.dart';
 import 'features/update/update_controller.dart';
 import 'features/update/update_dialog.dart';
@@ -30,11 +31,12 @@ class _CookLogAppState extends ConsumerState<CookLogApp> {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(goRouterProvider);
+    final style = ref.watch(themeStyleControllerProvider);
     return MaterialApp.router(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+      theme: AppTheme.light(style),
+      darkTheme: AppTheme.dark(style),
       routerConfig: router,
       builder: (context, child) =>
           UpdateListener(child: child ?? const SizedBox.shrink()),

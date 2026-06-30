@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../data/providers.dart';
+import '../../core/widgets/brand_fx.dart';
+import '../../core/theme/app_theme.dart';
+import '../../core/theme/theme_style_controller.dart';
 import '../update/update_controller.dart';
 import '../update/update_dialog.dart';
 
@@ -25,59 +29,145 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final prefs = ref.watch(preferencesServiceProvider);
+    final themeStyle = ref.watch(themeStyleControllerProvider);
     final packageInfo = ref.watch(packageInfoProvider);
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('设置')),
-      body: ListView(
-        children: [
-          const _SectionHeader('关于'),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('当前版本'),
-            subtitle: Text(
-              packageInfo.when(
-                data: (info) => '${info.version} (${info.buildNumber})',
-                loading: () => '读取中…',
-                error: (_, _) => '未知',
+      body: BrandBackdrop(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+          children: [
+            StaggerItem(
+              index: 0,
+              child: _SettingSection(
+                title: '关于',
+                child: _SettingCard(
+                  icon: Icons.info_outline,
+                  title: '当前版本',
+                  subtitle: packageInfo.when(
+                    data: (info) => '${info.version} (${info.buildNumber})',
+                    loading: () => '读取中…',
+                    error: (_, _) => '未知',
+                  ),
+                ),
               ),
             ),
-          ),
-          const Divider(),
-          const _SectionHeader('数据'),
-          ListTile(
-            leading: const Icon(Icons.delete_outline),
-            title: const Text('回收站'),
-            subtitle: const Text('恢复或永久删除已删除的菜谱'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/recycle-bin'),
-          ),
-          const Divider(),
-          const _SectionHeader('更新'),
-          ListTile(
-            leading: const Icon(Icons.system_update_outlined),
-            title: const Text('检查更新'),
-            subtitle: const Text('从发布源检查是否有新版本'),
-            trailing: _checking
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.chevron_right),
-            onTap: _checking ? null : _onCheckForUpdate,
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.update),
-            title: const Text('自动检查更新'),
-            subtitle: const Text('启动时（每 24 小时一次）自动检查'),
-            value: prefs.updateCheckEnabled,
-            onChanged: (value) async {
-              await prefs.setUpdateCheckEnabled(value);
-              if (mounted) setState(() {});
-            },
-          ),
-        ],
+            const SizedBox(height: 10),
+            StaggerItem(
+              index: 1,
+              child: _SettingSection(
+                title: '数据',
+                child: _SettingCard(
+                  icon: Icons.delete_outline_rounded,
+                  title: '回收站',
+                  subtitle: '恢复或永久删除已删除的菜谱',
+                  onTap: () => context.push('/recycle-bin'),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            StaggerItem(
+              index: 2,
+              child: _SettingSection(
+                title: '外观',
+                child: Material(
+                  color: scheme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(18),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: scheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.palette_outlined,
+                                size: 20,
+                                color: scheme.onPrimaryContainer,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text('主题风格'),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final s in AppThemeStyle.values)
+                              ChoiceChip(
+                                label: Text(s.label),
+                                selected: themeStyle == s,
+                                onSelected: (_) => ref
+                                    .read(themeStyleControllerProvider.notifier)
+                                    .setStyle(s),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            StaggerItem(
+              index: 3,
+              child: _SettingSection(
+                title: '更新',
+                child: Column(
+                  children: [
+                    _SettingCard(
+                      icon: Icons.system_update_alt_rounded,
+                      title: '检查更新',
+                      subtitle: '从发布源检查是否有新版本',
+                      trailing: _checking
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(
+                              Icons.chevron_right_rounded,
+                              color: scheme.onSurfaceVariant,
+                            ),
+                      onTap: _checking ? null : _onCheckForUpdate,
+                    ),
+                    const SizedBox(height: 8),
+                    Material(
+                      color: scheme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(18),
+                      child: SwitchListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        secondary: const Icon(Icons.auto_mode_rounded),
+                        title: const Text('自动检查更新'),
+                        subtitle: const Text('启动时（每 24 小时一次）自动检查'),
+                        value: prefs.updateCheckEnabled,
+                        onChanged: (value) async {
+                          await prefs.setUpdateCheckEnabled(value);
+                          if (mounted) setState(() {});
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -114,20 +204,91 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.title);
+class _SettingSection extends StatelessWidget {
+  const _SettingSection({required this.title, required this.child});
 
   final String title;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        title,
-        style: theme.textTheme.labelLarge
-            ?.copyWith(color: theme.colorScheme.primary),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 6, 4, 10),
+          child: Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        child,
+      ],
+    );
+  }
+}
+
+class _SettingCard extends StatelessWidget {
+  const _SettingCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainer,
+      borderRadius: BorderRadius.circular(18),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 20, color: scheme.onPrimaryContainer),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: Theme.of(context).textTheme.titleSmall),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              if (trailing != null) ...[const SizedBox(width: 8), trailing!],
+            ],
+          ),
+        ),
       ),
     );
   }
