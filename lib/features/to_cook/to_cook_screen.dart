@@ -7,6 +7,7 @@ import '../../core/widgets/emoji_empty_state.dart';
 import '../../core/widgets/quick_add_sheet.dart';
 import '../../core/widgets/ui_kit.dart';
 import '../../data/db/database.dart';
+import '../../data/models/enums.dart';
 import '../../data/providers.dart';
 import '../cooking_log/cooking_log_form.dart';
 import 'want_to_cook_form.dart';
